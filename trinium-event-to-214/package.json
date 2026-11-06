@@ -1,0 +1,25 @@
+{
+  "name": "trinium-event-to-214",
+  "version": "1.0.0",
+  "description": "Consumes driver-app order updates/events from Kafka and writes Trinium EDI 214 status files",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "once": "node src/index.js --once",
+    "test": "node --test --test-force-exit test/"
+  },
+  "dependencies": {
+    "@electric-sql/pglite": "^0.3.0",
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "kafkajs": "^2.2.4",
+    "pg": "^8.17.1",
+    "prom-client": "^15.1.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,0 +1,273 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlas.maersk.com/schemas/driver-app-update-event/v2",
+  "title": "Driver App Order Update / Event",
+  "description": "Subset of the Supplier Order Update Service (Transport Document v2.0.0). ORDER_UPDATE maps to POST /v1/updateTransportOrder, ORDER_EVENT maps to POST /v1/reportEvent. For Trinium orders the adapter service maps routePoint + eventStatus to EDI 214 AT7 codes.",
+  "type": "object",
+  "required": ["eventId", "eventType", "occurredAt", "source", "actor", "order"],
+  "additionalProperties": false,
+  "properties": {
+    "eventId": { "type": "string", "format": "uuid", "description": "Idempotency key (app clientEventId). TD: uniqueIdentifier." },
+    "eventType": { "type": "string", "enum": ["ORDER_UPDATE", "ORDER_EVENT"] },
+    "occurredAt": { "type": "string", "format": "date-time", "description": "UTC, when it happened on the device. TD: createTimestamp." },
+    "sentAt": { "type": "string", "format": "date-time", "description": "UTC, when it left the device (later than occurredAt for offline flush). TD: event.transmittedDatetime." },
+    "source": { "type": "string", "enum": ["DRIVER_APP", "GEOFENCE", "DISPATCHER", "SYSTEM"] },
+    "clientSequence": { "type": "integer", "minimum": 1, "description": "Per-order counter on the device; keeps offline events in order." },
+    "remarks": { "type": ["string", "null"], "maxLength": 500, "description": "TD: additionalRemarksFromCarrier." },
+    "actor": {
+      "type": "object",
+      "required": ["userId", "vendorCode"],
+      "additionalProperties": false,
+      "properties": {
+        "userId": { "type": "string", "description": "IAM (ForgeRock) subject. TD eventType USER_ID." },
+        "vendorCode": { "type": "string", "description": "Vendor SMDS ID. TD: parties[].partyCode (partyFunction = Carrier)." },
+        "vendorScac": { "type": ["string", "null"], "description": "TD: parties[].businessEntityCode." },
+        "deviceId": { "type": ["string", "null"] }
+      }
+    },
+    "order": {
+      "type": "object",
+      "required": ["orderNumber", "orderId", "sourceSystem"],
+      "additionalProperties": false,
+      "properties": {
+        "orderNumber": { "type": "string", "description": "TD: carrierBooking.carrierBookingNumber. For Trinium = 204 B2-04 (214 B10-02)." },
+        "orderId": { "type": "string", "format": "uuid" },
+        "sourceSystem": { "type": "string", "enum": ["SAP_TM", "TRINIUM"], "description": "Router key." },
+        "workOrderNumber": { "type": ["string", "null"], "description": "TD eventType WORKORDER_NUMBER. For Trinium = 204 L11*WO." }
+      }
+    },
+    "updates": { "$ref": "#/$defs/updates" },
+    "event": { "$ref": "#/$defs/event" }
+  },
+  "allOf": [
+    { "if": { "properties": { "eventType": { "const": "ORDER_UPDATE" } } },
+      "then": { "required": ["updates"], "not": { "required": ["event"] } } },
+    { "if": { "properties": { "eventType": { "const": "ORDER_EVENT" } } },
+      "then": { "required": ["event"], "not": { "required": ["updates"] } } }
+  ],
+  "$defs": {
+    "localDateTime": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+      "description": "Wall-clock time at the stop, no offset. Used directly for 214 AT7-05/06 (LT)."
+    },
+    "utcOffset": { "type": "string", "pattern": "^[+-]\\d{2}:\\d{2}$" },
+
+    "updates": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": false,
+      "description": "POST /v1/updateTransportOrder. Send only the blocks that changed.",
+      "properties": {
+        "decision": {
+          "type": "object",
+          "required": ["decision"],
+          "additionalProperties": false,
+          "properties": {
+            "decision": { "type": "string", "enum": ["CARRIER_ACCEPTED", "CARRIER_REJECTED"], "description": "TD: carrierBooking.carrierBookingStatus." },
+            "reasonCode": { "type": ["string", "null"], "enum": ["01", "02", "03", "04", "05", "06", "99", null], "description": "TD: carrierBookingRejectionReason.reasonCode. 01 lack of capacity, 02 cannot meet customer requirements, 03 cannot move cargo type, 04 incorrect charges, 05 incorrect facility/address, 06 no response, 99 other." },
+            "reasonText": { "type": ["string", "null"], "description": "TD: rejectionReasonAdditionalText." }
+          },
+          "if": { "properties": { "decision": { "const": "CARRIER_REJECTED" } } },
+          "then": { "required": ["reasonCode"], "properties": { "reasonCode": { "type": "string" } } }
+        },
+        "container": { "$ref": "#/$defs/container" },
+        "seals": {
+          "type": "array",
+          "minItems": 1,
+          "description": "TD: transportOrder.cargoStuffing[].seals[]. Needs container.equipmentNumber.",
+          "items": {
+            "type": "object",
+            "required": ["sealType", "sealNumber"],
+            "additionalProperties": false,
+            "properties": {
+              "sealType": { "type": "string", "enum": ["CARRIER_SEAL", "CUSTOMS_SEAL", "SHIPPER_SEAL", "VETERINARIAN_SEAL"] },
+              "sealNumber": { "type": "string" },
+              "sealKind": { "type": "string", "enum": ["Create", "Update", "Delete"], "default": "Create" }
+            }
+          }
+        },
+        "chassis": {
+          "type": "object",
+          "required": ["chassisNumber"],
+          "additionalProperties": false,
+          "properties": {
+            "chassisNumber": { "type": "string", "description": "TD: carriage.trailer.trailerIdentifier. 214 L11*CH. 'OWN' allowed for carrier-owned chassis (seen in Trinium 204s)." },
+            "chassisLicensePlate": { "type": ["string", "null"], "description": "TD: trailer.trailerLicensePlate." }
+          }
+        },
+        "truck": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "truckIdentifier": { "type": ["string", "null"], "description": "TD: carriage.truck.truckIdentifier (tractor number)." },
+            "truckLicensePlate": { "type": ["string", "null"], "description": "TD: carriage.truck.truckLicensePlate." }
+          }
+        },
+        "driver": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "TD: transportPlan.party[] (driver).",
+          "properties": {
+            "name": { "type": ["string", "null"] },
+            "phone": { "type": ["string", "null"] },
+            "licenseNumber": { "type": ["string", "null"] },
+            "badgeNumber": { "type": ["string", "null"] }
+          }
+        },
+        "documents": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/document" } }
+      }
+    },
+
+    "container": {
+      "type": "object",
+      "required": ["containerNumber"],
+      "additionalProperties": false,
+      "properties": {
+        "containerId": { "type": ["string", "null"], "format": "uuid" },
+        "equipmentNumber": { "type": ["string", "null"], "description": "TD: cargoStuffing[].equipment[].equipmentNumber = Carrier Booking assetIdentifier. Required by TD for seals. For Trinium the adapter synthesizes it." },
+        "containerNumber": { "type": "string", "pattern": "^[A-Z]{4}\\d{7}$", "description": "TD: cargoStuffing[].containerNumber. 214 N7-01/02/18." },
+        "containerSizeType": { "type": ["string", "null"], "description": "e.g. 20DV, 40DV, 40HC, 45HC. Not in TD; adapter maps to 214 N7-15 (20, 40, 40H, 45H)." },
+        "isEmpty": { "type": ["boolean", "null"], "description": "TD eventType EMPTY_CONT / LADEN_CONT on EQUIP_NUM_REGISTERED." },
+        "bookingReferenceNumber": { "type": ["string", "null"] },
+        "netWeight": { "type": ["number", "null"], "description": "Not in TD (NAM rail billing requirement in TSD)." },
+        "netWeightUOM": { "type": ["string", "null"], "enum": ["KG", "LB", null] }
+      }
+    },
+
+    "document": {
+      "type": "object",
+      "required": ["documentType", "fileName", "fileType"],
+      "additionalProperties": false,
+      "description": "TD: document + multipart file. Trinium: forwarded to Trinium Document API.",
+      "properties": {
+        "documentType": { "type": "string", "enum": ["POD", "POD_SIGNATURE", "POP", "INTERCHANGE", "MANIFEST", "ACCESSORIAL_APPROVAL", "HAZMAT", "MDO", "PHOTO_CLAIM", "OTHER"] },
+        "documentNumber": { "type": ["string", "null"] },
+        "fileName": { "type": "string" },
+        "fileType": { "type": "string", "enum": ["application/pdf", "image/jpeg", "image/png"] },
+        "fileReference": { "type": ["string", "null"], "description": "Upload ID / blob reference. File itself goes as multipart part or base64." },
+        "routePointId": { "type": ["string", "null"], "format": "uuid" }
+      }
+    },
+
+    "event": {
+      "type": "object",
+      "required": ["eventStatus", "transactionType"],
+      "additionalProperties": false,
+      "description": "POST /v1/reportEvent (transportLeg[].event).",
+      "properties": {
+        "eventStatus": {
+          "type": "string",
+          "enum": ["ARRIVAL", "DEPARTURE", "PROOF_OF_DELIVERY", "DELAY", "FUTILE_TRIP", "WAIT_TIME", "WAIT_TIME_DAYS", "CUSTOMER_APPOINTMENT|PICKUP", "CUSTOMER_APPOINTMENT|DROPOFF", "EQUIP_NUM_REGISTERED", "GPS_UPDATE"],
+          "description": "TD: event.eventStatus. Tells the adapter which milestone this is (no guessing from which timestamp is filled)."
+        },
+        "transactionType": { "type": "string", "enum": ["ADD", "UPDATE", "DELETE"], "description": "TD: event.transactionType. UPDATE = corrected time (214: resend same code). DELETE not sent to Trinium (no undo)." },
+        "correctionOf": { "type": ["string", "null"], "format": "uuid", "description": "eventId being corrected when transactionType = UPDATE." },
+        "eventSource": { "type": "string", "enum": ["MANUAL", "GEOFENCE"], "description": "GEOFENCE = AUTO_VERIFIED; overrides MANUAL." },
+        "routePoint": { "$ref": "#/$defs/routePoint" },
+        "appointment": { "$ref": "#/$defs/appointment" },
+        "delay": { "$ref": "#/$defs/delay" },
+        "waitTime": { "$ref": "#/$defs/waitTime" },
+        "container": { "$ref": "#/$defs/container" },
+        "location": { "$ref": "#/$defs/location" },
+        "documents": { "type": "array", "items": { "$ref": "#/$defs/document" }, "description": "e.g. POD photo / signature with PROOF_OF_DELIVERY." }
+      },
+      "allOf": [
+        { "if": { "properties": { "eventStatus": { "const": "ARRIVAL" } } },
+          "then": { "required": ["routePoint"], "properties": { "routePoint": { "required": ["actualArrivalDateTimeUTC", "actualArrivalDateTimeLocal", "timeZoneOffset"] } } } },
+        { "if": { "properties": { "eventStatus": { "const": "DEPARTURE" } } },
+          "then": { "required": ["routePoint"], "properties": { "routePoint": { "required": ["actualDepartureDateTimeUTC", "actualDepartureDateTimeLocal", "timeZoneOffset"] } } } },
+        { "if": { "properties": { "eventStatus": { "enum": ["PROOF_OF_DELIVERY", "FUTILE_TRIP"] } } },
+          "then": { "required": ["routePoint"] } },
+        { "if": { "properties": { "eventStatus": { "enum": ["CUSTOMER_APPOINTMENT|PICKUP", "CUSTOMER_APPOINTMENT|DROPOFF"] } } },
+          "then": { "required": ["routePoint", "appointment"] } },
+        { "if": { "properties": { "eventStatus": { "const": "DELAY" } } },
+          "then": { "required": ["delay"] } },
+        { "if": { "properties": { "eventStatus": { "enum": ["WAIT_TIME", "WAIT_TIME_DAYS"] } } },
+          "then": { "required": ["routePoint", "waitTime"] } },
+        { "if": { "properties": { "eventStatus": { "const": "EQUIP_NUM_REGISTERED" } } },
+          "then": { "required": ["container"] } },
+        { "if": { "properties": { "eventStatus": { "const": "GPS_UPDATE" } } },
+          "then": { "required": ["location"] } }
+      ]
+    },
+
+    "routePoint": {
+      "type": "object",
+      "required": ["routePointId"],
+      "additionalProperties": false,
+      "description": "The stop the event belongs to. Adapter looks up routePointId (or tmsReferenceId) to get stop sequence 1/2 and Trinium leg data.",
+      "properties": {
+        "routePointId": { "type": "string", "format": "uuid" },
+        "tmsReferenceId": { "type": ["string", "null"], "description": "TD eventType ZTMSREFERENCE_ID (route-point reference from Carrier Booking)." },
+        "locationGuid": { "type": ["string", "null"], "description": "TD eventType LOC_GUID." },
+        "siteCode": { "type": ["string", "null"], "description": "TD event.locations[].location / REF_EVENT_LOC." },
+        "actualArrivalDateTimeUTC": { "type": ["string", "null"], "format": "date-time", "description": "TD event.timestamp + ACTUAL_ARRIVAL." },
+        "actualDepartureDateTimeUTC": { "type": ["string", "null"], "format": "date-time", "description": "TD event.timestamp + ACTUAL_DEPARTURE." },
+        "actualArrivalDateTimeLocal": { "anyOf": [ { "$ref": "#/$defs/localDateTime" }, { "type": "null" } ] },
+        "actualDepartureDateTimeLocal": { "anyOf": [ { "$ref": "#/$defs/localDateTime" }, { "type": "null" } ] },
+        "timeZoneOffset": { "$ref": "#/$defs/utcOffset" },
+        "arrivalSource": { "type": ["string", "null"], "enum": ["DRIVER_APP", "GEOFENCE", "DISPATCHER", null] },
+        "departureSource": { "type": ["string", "null"], "enum": ["DRIVER_APP", "GEOFENCE", "DISPATCHER", null] },
+        "reasonCode": { "type": ["string", "null"], "description": "Null = normal (214 AT7-02 = NS). Futile / abort reason otherwise." }
+      }
+    },
+
+    "appointment": {
+      "type": "object",
+      "required": ["appointmentDateTimeLocal", "timeZoneOffset"],
+      "additionalProperties": false,
+      "description": "Usually from DISPATCHER/SYSTEM. TD eventType Z_APPOINTMENT_TMSTMP / _REF_CITY / _REF_STATE / _REF_EVENT. 214 AA / AB.",
+      "properties": {
+        "appointmentDateTimeUTC": { "type": ["string", "null"], "format": "date-time" },
+        "appointmentDateTimeLocal": { "$ref": "#/$defs/localDateTime" },
+        "appointmentEndDateTimeLocal": { "anyOf": [ { "$ref": "#/$defs/localDateTime" }, { "type": "null" } ] },
+        "timeZoneOffset": { "$ref": "#/$defs/utcOffset" },
+        "city": { "type": ["string", "null"] },
+        "state": { "type": ["string", "null"] },
+        "confirmationNumber": { "type": ["string", "null"], "description": "Terminal PIN / appointment number." }
+      }
+    },
+
+    "delay": {
+      "type": "object",
+      "required": ["reasonCode"],
+      "additionalProperties": false,
+      "description": "TD eventType DELAY_REASON_CODE / DELAY_REASON_DESC / ESTIM_DELAY_DATE / ESTIM_DELAY_TIME / ESTIM_DELAY_TZONE / DELAY_EVENT.",
+      "properties": {
+        "reasonCode": { "type": "string" },
+        "reasonDescription": { "type": ["string", "null"] },
+        "delayedEvent": { "type": ["string", "null"], "enum": ["ARRIVAL", "DEPARTURE", null] },
+        "estimatedDateTimeLocal": { "anyOf": [ { "$ref": "#/$defs/localDateTime" }, { "type": "null" } ] },
+        "timeZone": { "type": ["string", "null"] }
+      }
+    },
+
+    "waitTime": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "startDateTimeUTC": { "type": ["string", "null"], "format": "date-time" },
+        "endDateTimeUTC": { "type": ["string", "null"], "format": "date-time" },
+        "days": { "type": ["integer", "null"], "minimum": 0, "description": "For WAIT_TIME_DAYS." }
+      }
+    },
+
+    "location": {
+      "type": "object",
+      "required": ["latitude", "longitude", "recordedAt"],
+      "additionalProperties": false,
+      "description": "TD event.position[] / LATITUDE / LONGITUDE.",
+      "properties": {
+        "routePointId": { "type": ["string", "null"], "format": "uuid" },
+        "latitude": { "type": "number", "minimum": -90, "maximum": 90 },
+        "longitude": { "type": "number", "minimum": -180, "maximum": 180 },
+        "altitude": { "type": ["number", "null"] },
+        "recordedAt": { "type": "string", "format": "date-time" },
+        "yard": { "type": ["string", "null"] },
+        "row": { "type": ["string", "null"] },
+        "slot": { "type": ["string", "null"] }
+      }
+    }
+  }
+}

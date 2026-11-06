@@ -1,0 +1,1425 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Supplier Order Update Service",
+    "description": "This service is to be used to update Maersk Transport Order related events such as Accept, Reject, Seal Update and Container Update for Maersk Transport Orders received via the\n**<a\nhref=\"https://developer.maersk.com/api-catalogue/supplier-order-dispatch\" target=\"_blank\"\nstyle=\"font-weight: bold;\"><u>Supplier Order Dispatch Webhook</u></a>**. \n\n# Overview\n\nThe Supplier Order Update API allows Landside Vendors to provide real-time updates and automated information exchange with the Maersk Landside Transport Management System (TMS).  In combination with the Supplier Order Dispatch API, interaction between landside vendors and Maersk becomes way more efficient, following the newest technological industry standards. \n\n# Why use it?\n\nOur high-volume Landside Vendors have requested more modern methods for exchanging Transport Order information, moving away from EDI and email. The Supplier Order Update API, following the Supplier Order Dispatch API, marks the second step towards our vision of a comprehensive Transport Order API ecosystem. This integration helps both Maersk and Landside Suppliers save valuable time and resources in order execution, while also strengthening technical and business relationships. Suppliers onboarded to this API can now update Maersk on several Transport Order details, such as container numbers, delay notifications, customer appointment dates and times and even share documents such as dangerous goods.  \n\n\n# What's next?  \n\nAt Maersk, our vision is to establish a comprehensive API ecosystem for our Landside Vendors. Following the Transport Order Dispatch API, the Transport Order Update API is the second step towards that vision, allowing vendors to send documents, truck details, delay notifications, container numbers and more. This will be followed by additional versions and capabilities that will further enhance this ecosystem by allowing suppliers to request order updates, additional charges and submit invoices to Maersk.\n\n\n# Who can get access?\n\nThis API is tailored for Landside suppliers, including truck carriers, rail\ncarriers and barge carriers, who operate their own Transport Management\nsystem. It offers a direct communication channel with the Maersk Transport\nManagement System via API, ensuring they receive Maersk Transport Orders\nswiftly and seamlessly, in the most modern and efficient manner available.  \n\n\n# Getting started\n\nTo get access to the **<a\nhref=\"https://developer.maersk.com/api-catalogue/supplier-order-dispatch\" target=\"_blank\"\nstyle=\"font-weight: bold;\"><u>Supplier Order Dispatch Webhook</u></a>**, you can\nwrite to us at **<a href=\"mailto:SupplierAPICustomerConnect@maersk.com\"\ntarget=\"_blank\" style=\"font-weight:\nbold;\"><u>SupplierAPICustomerConnect@maersk.com</u></a>**.  You'll need to provide us\nwith the URL of your HTTPS webhook, authentication method and health\nendpoint as defined in our Technical Specifications. \n\n\nTo request access to the Order Update endpoint, you need to **<a\nhref=\"https://developer.maersk.com/login\" target=\"_blank\"\nstyle=\"font-weight: bold;\"><u>login</u></a>** using your company email\naddress and create an App to enable this API product for your Consumer Key.\nFor step-by-step instructions, please refer to our **<a\nhref=\"https://developer.maersk.com/support/getting-started-api\"\ntarget=\"_blank\" style=\"font-weight: bold;\"><u>Getting Started\nGuide</u></a>**.    \n\n\n# OAuth 2.0\n\nThe Supplier Order Update API requires OAuth 2.0 for authentication.  **<a href=\"https://edpmediastorage.blob.core.windows.net/media/supplier-order-dispatch-authorisation-guide.pdf\" target=\"_blank\" style=\"font-weight: bold;\"><u>Download the Authorisation Guide</u></a>**. \n\n\n# How many calls can I make?\nTraffic and spike arrest limits are configured at the consumer key level for each API Product as detailed in the table below. If these limits are exceeded, the request is rejected with a 429 Too Many Requests HTTP status code.\n| Quota per Consumer Key | Traffic Surge Rate Limit per Consumer Key |\n|------------------------|-------------------------------------------|\n| 10,000 calls per hour  | 3,000 calls per minute                    |\n\n# Release Notes\n| Version | Date | Notes |\n|---------|------|-------| \n| 1.0.0   | 2025-02-24 | The first version of transport orders updates featuring container number update, carrier Accepted/Rejected and driver details. Additionally, vendor partners can report events such as delay, time of arrival/departure, proof of delivery, customer appointment and waiting time, among others. |\n| 2.0.0   | 2025-03-08 | The latest version enhances existing capabilities for sending transport order updates and reporting events. It introduces the ability to attach files (PDF, JPEG, PNG) for both types of updates, including the necessary data validations. Additionally, support for base64-encoded file attachments has been added  for secure and compatible data handling. This version also provides capabilities to report charges for a freight order, and register GPS milestone events. |\n\n# FAQs (Frequently Asked Questions)  \n\n**Q: What schema should I use?**  \n\nYou should use the latest version of the APIs, **/v1/updateTransportOrder** and **/v1/reportEvent**, which is backward compatible ensuring a seamless transition. The latest version also introduces additional features such as file uploads (PDF, JPEG, PNG), charge reporting for freight orders, and GPS milestone events. Additionally, support for base64-encoded file attachments has been added for secure and compatible data handling. We intent to deprecate the **/updateTransportOrder** & **/reportEvent** endpoints soon, switching to the latest version will provide continued compatibility and access to enhanced capabilities. \n# Key Points:\n**1: Request Payload Schema:**\n\nThe request payload schema remains consistent between the updated and legacy APIs. Consequently, there is no necessity for modifications in the structure or validation of the request data when transitioning from the old APIs to the new ones.\n\n**2: Multipart/Form-Data Support:**\n\nThe updated APIs, /v1/updateTransportOrder and /v1/reportEvent, now support multipart/form-data, allowing users to attach files in either base64 or binary format. These files can be included alongside request metadata, such as transport order details or event reporting information, for seamless data submission.\n\n**3: Validation and Structure:** \n\nThe validation and structure of the request payload remain consistent between the new and old APIs. Therefore, transitioning from the old to the new API versions will not necessitate any modifications to the data structure or validation processes.\n\n# Important Notice About API Deprecation:\n\nThe legacy APIs **(/updateTransportOrder and /reportEvent)** will be deprecated soon. As part of this transition, it is strongly recommended to adopt the updated APIs **(/v1/updateTransportOrder and /v1/reportEvent)** to ensure ongoing compatibility and leverage their enhanced capabilities, such as the ability to upload files alongside the request metadata.\n\n\n# Key Considerations to use updated APIs:\n\n**File Upload Capability:** \nThe updated APIs support file uploads via multipart/form-data, offering greater flexibility for attaching additional files (such as PDFs or images) alongside the metadata.\n\n**Consistent Schema:** \nSince the schema remains consistent, migrating to the updated API is straightforward and seamless, without necessitating any significant changes on the client-side.\n\n**Future-Proof:** \nThe legacy APIs will eventually be deprecated. Transitioning to the updated APIs ensures you remain aligned with the most current version, thereby avoiding any service interruptions when the legacy APIs are no longer supported.\n\n**In summary**, you should continue using the same schema for the request payload when working with either the legacy or updated APIs. However, we strongly encourage migrating to the updated **/v1/updateTransportOrder** and **/v1/reportEvent** APIs to future-proof your integration and take advantage of the file upload functionality.\n\n\n**Q: What type of Transport Order event updates are supported by this API?**   \n\nA:  This service supports almost all important Transport Order details such as:  \n\n| Event | Description |\n|-------|-------------|\n| Receive real-time tracking (GPS) | Receive GPS updates every 10 minutes of the truck location, as well as an identifier of the leg to which this GPS refers to.  Also supports GPS tracking for Triangulation and Multi-stop. |\n| Receive Container Number updates | Support single container update (not Bulk!) to keep message format simple.  Also supports drop & swap. |  \n| Receive actual time of arrival or time of departure | Receive updates for ETA and ETD. |  \n| Receive Milestones | Instead of GPS, this API can be used just to receive the milestone and an indication of the leg to which this GPS refers to.  Also supports Milestone tracking for Triangulation and Multi-stop. |  \n| Receive Proof of Delivery |  |  \n| Receive Delay Notification | Carriers can use this API to advise of delays not due to the customer. |  \n| Receive Waiting Time | Carriers can use this API to advise of delays due to the customer. |  \n| Receive Futile Trip | Carriers can advise that transportation could not be completed as requested. |  \n| Receive License Plate Number | Carriers can provide the licensce plate number of the truck used in the transportation. |  \n| Receive Seal Number | Carriers can provide the seal in use for the container when the tranportation started. |  \n| Receive Confirmation/Rejection of TRO | Carriers can confirm TRO execution or reject it (with reasons for rejection) |    \n| Receive document | Supported document types: <ul><li>Dangerous Goods</li><li>Driver Notes</li><li>Packing List</li><li>Photos (damages)</li><li>Other</li></ul>|  \n| Receive Driver details | Details include: <ul><li>Badge Number</li><li>Name</li><li>Phone Number</li></ul>|  \n| Receive Truck details | Details include: <ul><li>Chassis Number</li><li>License Plate</li><li>Year</li></ul>|  \n| Receive customer appointment | Defines the date and time interval agreed with the customer to pickup the container. |  \n\n\n**Q: When will production access be provided?**   \nA: Test data is provided that can be used to simulate transport orders in the pre-production environment. Once we have validated successful receipt of your POST request in pre-production, access to our Production environment will be enabled.  \n\n**Q: When should I use the Update API (/v1/updateTransportOrder) versus the Events API (/v1/reportEvent)?**\n<br>\nA:   Use the **Update API (/v1/updateTransportOrder)** for  - <ul><li> Container Number </li>  <li> Seal Information  </li> <li>Driver Details </li>  <li>Accept/Reject Status </li>  <li> Attachments (such as documents or images) </li>  <li> Charges (not related to specific events)  </li></ul>\n<br>\nUse the **Events API (/v1/reportEvent)** for  <ul><li> Arrival at Customer Location </li>  <li> Departure from Customer Location </li>  <li> Delay Events </li>  <li> Futile Trips (event-based charges)  </li> <li> Waiting Time Charges (event-based charges) </li>  <li> Proof of Delivery </li>  <li> Customer Delivery Appointment Date / Drop-off Date </li>  <li> Customer Pickup Appointment Date </li> <li> Receive real-time tracking (GPS) </li>  <li> Container Number updates that are associated with an event </li></ul>\n**Q: Where to find the sample payload for update apis?**\n<br> \nA: You can find the sample payload for the update APIs here <a href=\"https://chassisopenapi.blob.core.windows.net/inbound/sample_payloads.zip\" style=\"font-weight: bold;\"><u>Download a sample JSON payload for reference</u></a>\n\n**Q: Who can I contact for additional information and technical support?**\n\nA: You can contact us at **<a href=\"mailto:SupplierAPICustomerConnect@maersk.com\" target=\"_blank\" style=\"font-weight: bold;\"><u>SupplierAPICustomerConnect@maersk.com</u></a>** if you have additional questions or require technical assistance. \n",
+    "version": "2.0.0",
+    "contact": {
+      "email": "SupplierAPICustomerConnect@maersk.com"
+    },
+    "license": {
+      "url": "https://terms.maersk.com/api-license-terms",
+      "name": "Maersk 1.0"
+    },
+    "x-spectral": {
+      "ignore": [
+        "path-parameters-camelCase-alphanumeric",
+        "properties-camelCase-alphanumeric",
+        "paths-kebab-case"
+      ]
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api-stage.maersk.com/lsc/transport-document",
+      "description": "PREPROD Environment"
+    },
+    {
+      "url": "https://api.maersk.com/lsc/transport-document",
+      "description": "PROD environment"
+    }
+  ],
+  "security": [
+    {
+      "Consumer-Key": []
+    },
+    {
+      "oauth2Stage": [
+        "Landside-chasis.read",
+        "ec.{{vendorCode}}.pr.Landside-Chasis.read"
+      ]
+    },
+    {
+      "oauth2Prod": [
+        "Landside-chasis.read",
+        "ec.{{vendorCode}}.pr.Landside-Chasis.read"
+      ]
+    }
+  ],
+  "tags": [
+    {
+      "name": "Inbound Events to Maersk",
+      "description": "Defining the schema for outbound and inbound messages"
+    }
+  ],
+  "paths": {
+    "/v1/updateTransportOrder": {
+      "post": {
+        "tags": [
+          "Inbound Events to Maersk"
+        ],
+        "summary": "Update Transport Order Details with Attachment(/v1/updateTransportOrder)",
+        "description": "This endpoint is used to receive the transport order update sent by the vendor. It requires an authorization token.",
+        "operationId": "updateTransportOrderV1",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "$ref": "#/components/schemas/TransportDocument"
+                  },
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Binary file attachment"
+                  },
+                  "fileContent": {
+                    "$ref": "#/components/schemas/Base64FileData"
+                  }
+                },
+                "required": [
+                  "data"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Request accepted."
+          },
+          "400": {
+            "description": "Bad Request.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized access. Authentication is required."
+          },
+          "403": {
+            "description": "Forbidden. You do not have the necessary permissions."
+          },
+          "404": {
+            "description": "Resource not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error. Please try again later.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/reportEvent": {
+      "post": {
+        "tags": [
+          "Inbound Events to Maersk"
+        ],
+        "summary": "Report Transport Order Event  with Attachment(/v1/reportEvent)",
+        "description": "This endpoint is used to receive the transport events sent by the vendor. It requires an authorization token.",
+        "operationId": "reportEventV1",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "$ref": "#/components/schemas/TransportOrderEvent"
+                  },
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "fileContent": {
+                    "$ref": "#/components/schemas/Base64FileData"
+                  }
+                },
+                "required": [
+                  "data"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Request accepted."
+          },
+          "400": {
+            "description": "Bad Request.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized access. Authentication is required."
+          },
+          "403": {
+            "description": "Forbidden. You do not have the necessary permissions."
+          },
+          "404": {
+            "description": "Resource not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error. Please try again later.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/updateTransportOrder": {
+      "post": {
+        "tags": [
+          "Inbound Events to Maersk"
+        ],
+        "summary": "Update Transport Order Details",
+        "description": "This endpoint is used to receive the transport order update sent by the vendor. It requires an authorization token.",
+        "operationId": "updateTransportOrder",
+        "deprecated": true,
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransportDocument"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Request accepted."
+          },
+          "400": {
+            "description": "Bad Request.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized access. Authentication is required."
+          },
+          "403": {
+            "description": "Forbidden. You do not have the necessary permissions."
+          },
+          "404": {
+            "description": "Resource not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error. Please try again later.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reportEvent": {
+      "post": {
+        "tags": [
+          "Inbound Events to Maersk"
+        ],
+        "summary": "Report Transport Order Event",
+        "description": "This endpoint is used to receive the transport events sent by the vendor. It requires an authorization token.",
+        "operationId": "reportEvent",
+        "deprecated": true,
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransportOrderEvent"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Request accepted."
+          },
+          "400": {
+            "description": "Bad Request.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized access. Authentication is required."
+          },
+          "403": {
+            "description": "Forbidden. You do not have the necessary permissions."
+          },
+          "404": {
+            "description": "Resource not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error. Please try again later.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/documents/{document-id}": {
+      "get": {
+        "tags": [
+          "Document Attachment"
+        ],
+        "summary": "Download the existing Attachment",
+        "description": "This endpoint is used to download the attachment uploaded to . It requires an authorization token.",
+        "operationId": "downloadDocument",
+        "parameters": [
+          {
+            "name": "document-id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful with response DTO.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized access. Authentication is required."
+          },
+          "403": {
+            "description": "Forbidden. You do not have the necessary permissions."
+          },
+          "404": {
+            "description": "Resource not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error. Please try again later.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CargoStuffing": {
+        "type": "object",
+        "properties": {
+          "cargoStuffingNumber": {
+            "type": "string",
+            "description": "Unique CargoStuffing Number -Equipment ID from GCSS/Telikos"
+          }
+        }
+      },
+      "CargoStuffingDetails": {
+        "type": "object",
+        "properties": {
+          "containerNumber": {
+            "type": "string",
+            "description": "Container Number is the registration or the plate number of a container",
+            "maxLength": 40,
+            "minLength": 0
+          },
+          "equipment": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Equipment"
+            }
+          },
+          "seals": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Seal"
+            }
+          }
+        }
+      },
+      "CarrierBooking": {
+        "type": "object",
+        "properties": {
+          "carrierBookingNumber": {
+            "type": "string",
+            "description": "Transport Order number ",
+            "example": "67000251859",
+            "maxLength": 35,
+            "minLength": 0
+          },
+          "carrierBookingStatus": {
+            "type": "string",
+            "description": "The 'CarrierBookingStatus' field represents the status of a transport order booking, indicating the current state of the booking process with the carrier.\n\nAllowed Values:\n- 'CARRIER_REJECTED'   - The carrier has rejected the booking request.\n- 'CARRIER_ACCEPTED'    - The carrier has accepted the booking request.\n- 'RAIL_CARRIER_UPDATE' - The booking status has been updated by the rail carrier.\n- 'EQUIPMENT_ASSIGNED'  - Equipment has been assigned to the booking.\n",
+            "enum": [
+              "CARRIER_REJECTED",
+              "CARRIER_ACCEPTED",
+              "RAIL_CARRIER_UPDATE",
+              "EQUIPMENT_ASSIGNED"
+            ],
+            "example": "CARRIER_REJECTED",
+            "maxLength": 25,
+            "minLength": 0
+          },
+          "carrierBookingRejectionReason": {
+            "$ref": "#/components/schemas/CarrierBookingRejectionReason"
+          }
+        },
+        "required": [
+          "carrierBookingNumber"
+        ]
+      },
+      "CarrierBookingRejectionReason": {
+        "type": "object",
+        "properties": {
+          "reasonCode": {
+            "type": "string",
+            "description": "Rejection Reason Code.\n\n- '01' - LACK OF CAPACITY\n- '02' - UNABLE TO MEET CUSTOMER REQUIREMENTS\n- '03' - UNABLE TO MOVE CARGO TYPE\n- '04' - INCORRECT CHARGES\n- '05' - INCORRECT FACILITY/ADDRESS\n- '06' - NO RESPONSE\n- '99' - OTHER\n",
+            "enum": [
+              "01",
+              "02",
+              "03",
+              "04",
+              "05",
+              "06",
+              "99"
+            ],
+            "example": "01",
+            "maxLength": 2,
+            "minLength": 0
+          },
+          "rejectionReasonAdditionalText": {
+            "type": "string",
+            "description": " RejectionReasonAdditionalText ",
+            "example": "some text related to carrier booking rejection "
+          }
+        }
+      },
+      "ChargeType": {
+        "type": "object",
+        "properties": {
+          "chargeTypeCode": {
+            "type": "string",
+            "description": "Rate Line: Charge Type Code",
+            "example": "ZTRUCK_INT_FUEL",
+            "maxLength": 15,
+            "minLength": 0
+          }
+        },
+        "required": [
+          "chargeTypeCode"
+        ]
+      },
+      "CommunicationMediaType": {
+        "type": "object",
+        "properties": {
+          "communicationMediaTypeName": {
+            "type": "string",
+            "default": "API",
+            "description": "Carrier: Communication Channels-  Source of message, Not relevant to vendor\n   Allowed Values :\n   - \"API\"\n   - \"EDI\"\n   - \"SupplierConnect\"\n",
+            "enum": [
+              "API",
+              "EDI",
+              "SupplierConnect"
+            ],
+            "example": "API"
+          }
+        }
+      },
+      "Document": {
+        "type": "object",
+        "properties": {
+          "documentNumber": {
+            "type": "string",
+            "maxLength": 36,
+            "minLength": 0
+          },
+          "documentName": {
+            "type": "string"
+          },
+          "documentType": {
+            "$ref": "#/components/schemas/DocumentType"
+          },
+          "fileType": {
+            "type": "string",
+            "description": "File format type\nAllowed values\n- image/jpeg\n- image/png\n- application/pdf\n",
+            "example": "application/pdf ",
+            "maxLength": 40,
+            "minLength": 0
+          }
+        },
+        "required": [
+          "documentName"
+        ]
+      },
+      "DocumentType": {
+        "type": "object",
+        "properties": {
+          "documentTypeCode": {
+            "type": "string",
+            "description": "File format type\nAllowed values\n- image/jpeg\n- image/png\n- application/pdf\n",
+            "example": "application/pdf ",
+            "maxLength": 40,
+            "minLength": 0
+          },
+          "documentTypeName": {
+            "type": "string",
+            "description": "File Name",
+            "example": "Screenshot 2024-07-24 125720.png",
+            "maxLength": 400,
+            "minLength": 0
+          }
+        }
+      },
+      "Equipment": {
+        "type": "object",
+        "properties": {
+          "equipmentNumber": {
+            "type": "string",
+            "description": "EquipmentNumber- Mandatory to send the SEAL Information. Vendor should send back the Equipment number received from TM(Carrier Booking - assetIdentifier) while updating the SEAL information to TM. Please note that it is not the Container number.",
+            "example": "0KTGAKBCS2L3B",
+            "maxLength": 35,
+            "minLength": 0
+          }
+        },
+        "required": [
+          "equipmentNumber"
+        ]
+      },
+      "Event": {
+        "type": "object",
+        "properties": {
+          "eventIdentifier": {
+            "type": "string",
+            "description": "The 'EventIdentifier' field is a unique identifier assigned to a specific event (such as arrival, departure, waiting time, or delay) to distinguish it from other events. This field ensures that each event can be accurately tracked and referenced throughout its lifecycle, and it may include information such as event number, code, or a combination of alphanumeric characters. The EventIdentifier is used alongside other event-related details like FacilityCode, FacilityName, latitude, longitude, altitude, and additional references.\n\nA unique identifier for an arrival event, where 'ARR' denotes arrival, '2024' is the year, and '000123' is a sequential event number.",
+            "example": "ARR-2024-000123",
+            "maxLength": 20,
+            "minLength": 0
+          },
+          "reference": {
+            "type": "string",
+            "description": "The 'Reference' field is used to capture any additional identifier or tracking information related to the shipment beyond the main tracking ID. This field allows for the inclusion of supplementary references such as shipment numbers, customer references, or internal codes, facilitating enhanced tracking and management of the shipment across various stages of the event",
+            "example": "YT2421721901000053",
+            "maxLength": 50,
+            "minLength": 0
+          },
+          "eventTrigger": {
+            "type": "string",
+            "description": "The 'EventTrigger' field specifies a key event (such as arrival, departure, waiting time, delay, or GPS update) that, when detected, triggers predefined actions to manage and respond to that event.\n\nSome sample values:\n- 'ARRIVAL'        - Event triggered when the container or cargo arrives at the destination\n- 'POD'            - Proof of Delivery event\n- 'DEPARTURE'      - Event triggered when the container or cargo departs from a location\n- 'WAITING_TIME'   - Event triggered to track waiting time\n- 'DELAY'          - Event triggered due to a delay in the process\n- 'GPS_UPDATE'     - Event triggered by an update in GPS location\n",
+            "example": "ARRIVAL",
+            "maxLength": 20,
+            "minLength": 0
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The 'Timestamp' field records the precise date and time when a specific event (such as arrival, departure, waiting time, delay, or GPS update) occurs, enabling accurate tracking and management of events.\n\nDate Format : yyyy-MM-ddTHH:mm:ssZ\n",
+            "example": "2024-08-07T10:02:00Z"
+          },
+          "transactionType": {
+            "type": "string",
+            "description": "The 'TransactionType' field specifies the type of operation to be performed on previously recorded event data, indicating whether the action is to add new data, delete existing data, or update existing data for events such as arrival, departure, waiting time, delay, or GPS updates.\n\nAllowed Values:\n- 'ADD'    - Add new event data\n- 'DELETE' - Remove existing event data\n- 'UPDATE' - Modify/update existing event data\n",
+            "enum": [
+              "ADD",
+              "DELETE",
+              "UPDATE"
+            ],
+            "example": "ADD",
+            "maxLength": 20,
+            "minLength": 0
+          },
+          "eventStatus": {
+            "type": "string",
+            "description": "    The 'EventStatus' field indicates the current state or progress of an event (such as arrival, departure, waiting time, delay, or GPS update),\n    providing real-time updates on the status of the trip.\n\n    Allowed values and their descriptions:\n    - ARRIVAL: Gate In/Arrival at Destination\n    - DELAY: Delay\n    - DEPARTURE: Gate Out/Departure\n    - PROOF_OF_DELIVERY: Proof of Delivery\n    - CUSTOMER_APPOINTMENT|DROPOFF: Customer delivery appointment Event\n    - EQUIP_NUM_REGISTERED: Equipment Update Event\n    - FUTILE_TRIP: Futile trip\n    - CUSTOMER_APPOINTMENT|PICKUP: Customer pickup appointment Event\n    - WAIT_TIME: Waiting Charge Request\n    - WAIT_TIME_DAYS: Waiting Charge Request - Days\n    - GPS_UPDATE: GPS Update Event\n",
+            "enum": [
+              "ARRIVAL",
+              "DELAY",
+              "DEPARTURE",
+              "PROOF_OF_DELIVERY",
+              "CUSTOMER_APPOINTMENT|DROPOFF",
+              "EQUIP_NUM_REGISTERED",
+              "FUTILE_TRIP",
+              "CUSTOMER_APPOINTMENT|PICKUP",
+              "WAIT_TIME",
+              "WAIT_TIME_DAYS",
+              "GPS_UPDATE"
+            ],
+            "example": "ARRIVAL",
+            "maxLength": 50,
+            "minLength": 0
+          },
+          "transmittedDatetime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The 'TransmittedDatetime' field records the exact date and time when the event data (such as arrival, departure, waiting time, delay, or GPS update) was sent or transmitted, ensuring accurate tracking of when information was communicated. Date Format : yyyy-MM-ddTHH:mm:ssZ",
+            "example": "2024-04-12T07:07:29Z"
+          },
+          "receivedDatetime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The 'ReceivedDatetime' field captures the precise date and time when the event data (such as arrival, departure, waiting time, delay, or GPS update) was received, allowing for accurate logging and tracking of when the information was successfully obtained. Date Format : yyyy-MM-ddTHH:mm:ssZ",
+            "example": "2024-04-12T07:07:29Z"
+          },
+          "createTimestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The 'CreateTimestamp' field records the exact date and time when the event data (such as arrival, departure, waiting time, delay, or GPS update) was initially created, ensuring a precise log of when the information was first generated. Date Format : yyyy-MM-ddTHH:mm:ssZ",
+            "example": "2024-04-12T07:07:29Z"
+          },
+          "updateTimestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The UpdateTimestamp field records the exact date and time when the event data (such as arrival, departure, waiting time, delay, or GPS update) was last modified, ensuring a precise log of the most recent changes or updates made to the information. Date Format : yyyy-MM-ddTHH:mm:ssZ",
+            "example": "2024-04-12T07:07:29Z"
+          },
+          "eventType": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EventType"
+            }
+          },
+          "position": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Position"
+            }
+          },
+          "locations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Locations"
+            }
+          }
+        },
+        "required": [
+          "timestamp"
+        ]
+      },
+      "EventType": {
+        "type": "object",
+        "properties": {
+          "eventTypeName": {
+            "type": "string",
+            "description": "    The 'EventTypeName' field describes the specific category or nature of an event (such as arrival, departure, waiting time, or delay)\n    and captures additional relevant information associated with the event, such as container number, booking number, or work order number,\n    providing comprehensive context and details for effective tracking and management.\n\n    Allowed values:\n    - WORKORDER_NUMBER\n    - REGISTRATION_NUMBER\n    - USER_ID\n    - VENDOR_CODE\n    - EQUIPMENT_ID\n    - DELAY_REASON_CODE\n    - DELAY_REASON_DESC\n    - ESTIM_DELAY_DATE\n    - ESTIM_DELAY_TIME\n    - ESTIM_DELAY_TZONE\n    - DELAY_EVENT\n    - ACTUAL_ARRIVAL\n    - REF_EVENT_LOC\n    - LOC_GUID\n    - ACTUAL_DEPARTURE\n    - ZTMSREFERENCE_ID\n    - EMPTY_CONT\n    - LADEN_CONT\n    - EMPTY_CU\n    - LADEN_CU\n    - ZZTRANSPORT_TYPE\n    - Z_APPOINTMENT_TMSTMP\n    - Z_APPOINTMENT_REF_STATE\n    - Z_APPOINTMENT_REF_CITY\n    - Z_APPOINTMENT_REF_EVENT\n    - LONGITUDE\n    - LATITUDE\n",
+            "enum": [
+              "WORKORDER_NUMBER",
+              "REGISTRATION_NUMBER",
+              "USER_ID",
+              "VENDOR_CODE",
+              "EQUIPMENT_ID",
+              "DELAY_REASON_CODE",
+              "DELAY_REASON_DESC",
+              "ESTIM_DELAY_DATE",
+              "ESTIM_DELAY_TIME",
+              "ESTIM_DELAY_TZONE",
+              "DELAY_EVENT",
+              "ACTUAL_ARRIVAL",
+              "REF_EVENT_LOC",
+              "LOC_GUID",
+              "ACTUAL_DEPARTURE",
+              "ZTMSREFERENCE_ID",
+              "EMPTY_CONT",
+              "LADEN_CONT",
+              "EMPTY_CU",
+              "LADEN_CU",
+              "ZZTRANSPORT_TYPE",
+              "Z_APPOINTMENT_TMSTMP",
+              "Z_APPOINTMENT_REF_STATE",
+              "Z_APPOINTMENT_REF_CITY",
+              "Z_APPOINTMENT_REF_EVENT",
+              "LONGITUDE",
+              "LATITUDE"
+            ],
+            "example": "WORKORDER_NUMBER",
+            "maxLength": 32,
+            "minLength": 0
+          },
+          "eventTypeCode": {
+            "type": "string",
+            "description": "The 'EventTypeCode' field represents a specific code that categorizes the type of event (such as arrival, departure, waiting time, or delay) and captures related values such as container number, booking number, or work order number, providing a structured way to identify and reference detailed information associated with the event.",
+            "example": "MSKU8670004",
+            "maxLength": 200,
+            "minLength": 0
+          }
+        }
+      },
+      "Locations": {
+        "type": "object",
+        "properties": {
+          "location": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 0
+          },
+          "locationFunction": {
+            "type": "string",
+            "maxLength": 30,
+            "minLength": 0
+          }
+        }
+      },
+      "Party": {
+        "type": "object",
+        "description": "Parties: Shipper/Consignee/BookedBy/Customer/...\nSegment 'Parties' (always 1) will include 1 or more segments 'Party'.  Each segment 'Party' will contain Party Code, Name, Role, Address and communication details.",
+        "properties": {
+          "partyFunction": {
+            "type": "string",
+            "default": "Carrier",
+            "description": " Type of vendor who is performing this service. For Trucker this value would be Carrier.\n\nCommon examples include\n    - 'Shipper'\n    - 'Consignee'\n    - 'Carrier'\n",
+            "example": "Carrier",
+            "maxLength": 35,
+            "minLength": 0
+          },
+          "partyCode": {
+            "type": "string",
+            "description": "SMDS ID of Vendor (Trucker) and the source of information would be CarrierBooking->Parties->Party->PartyCode.",
+            "example": "1147402",
+            "maxLength": 60,
+            "minLength": 0
+          },
+          "partyName": {
+            "type": "string",
+            "description": "Vendor (trucker) Name.",
+            "example": "ABC Trucking",
+            "maxLength": 40,
+            "minLength": 0
+          },
+          "businessEntityCode": {
+            "type": "string",
+            "description": "Vendor SCAC Code (Standard Carrier Alpha Code)",
+            "example": "VSCA",
+            "maxLength": 40,
+            "minLength": 0
+          },
+          "telecommunicationNumbers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TelecommunicationNumbers"
+            }
+          }
+        },
+        "required": [
+          "partyCode",
+          "partyFunction"
+        ]
+      },
+      "Party_1": {
+        "type": "object",
+        "description": "Parties: Shipper/Consignee/BookedBy/Customer/...\nSegment 'Parties' (always 1) will include 1 or more segments 'Party'.  Each segment 'Party' will contain Party Code, Name, Role, Address and communication details.",
+        "properties": {
+          "partyFunction": {
+            "type": "string",
+            "description": "It is to identify the driver details of a truck who is executing the order",
+            "example": "DRIVER 1",
+            "maxLength": 35,
+            "minLength": 0
+          },
+          "partyName": {
+            "type": "string",
+            "description": "Truck Driver Name who is executing the order",
+            "example": "FERHAT KILIÇ",
+            "maxLength": 40,
+            "minLength": 0
+          },
+          "licenseNumber": {
+            "type": "string",
+            "description": "Driving License ID of the Truck Driver who is executing the order",
+            "example": "Driving License Number",
+            "maxLength": 32,
+            "minLength": 0
+          },
+          "badgeNumber": {
+            "type": "string",
+            "maxLength": 35,
+            "minLength": 0
+          },
+          "telecommunicationNumbers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TelecommunicationNumbers"
+            }
+          }
+        }
+      },
+      "Position": {
+        "type": "object",
+        "properties": {
+          "latitude": {
+            "type": "string",
+            "description": "The 'Latitude' field records the geographic latitude coordinate of an event (such as arrival, departure, gps event) in decimal degrees, providing precise location information to help in tracking and mapping the event's position",
+            "example": "41.45678",
+            "maxLength": 40,
+            "minLength": 0
+          },
+          "longitude": {
+            "type": "string",
+            "description": "The Longitude field records the geographic longitude coordinate of an event (such as arrival, departure, or gps events) in decimal degrees, providing precise location information that aids in tracking and mapping the event's position, and is often used in conjunction with latitude",
+            "example": "2.731",
+            "maxLength": 40,
+            "minLength": 0
+          },
+          "altitude": {
+            "type": "string",
+            "description": "The Altitude field records the geographic altitude of an event (such as arrival, departure, or gps event) in meters, providing the elevation above sea level at the event's location. This field enhances location data by specifying vertical position and is often used alongside latitude and longitude coordinates",
+            "example": "2.17",
+            "maxLength": 50,
+            "minLength": 0
+          }
+        }
+      },
+      "Rate": {
+        "type": "object",
+        "properties": {
+          "rateNumber": {
+            "type": "string"
+          },
+          "rateLines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RateLine"
+            },
+            "maxItems": 2147483647,
+            "minItems": 1
+          }
+        },
+        "required": [
+          "rateLines"
+        ]
+      },
+      "RateLine": {
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "number",
+            "format": "double",
+            "description": "Final Amount claimed by vendor or supplier connect for a NON-CONTRATUAL Charge\nThis Field should be left empty if the requested charge is CONTRACTUAL",
+            "example": 100
+          },
+          "externalDescription": {
+            "type": "string",
+            "description": "Charge remarks by Vendor",
+            "example": "Trucking Surcharges Empty"
+          },
+          "paymentCondition": {
+            "type": "string"
+          },
+          "unitPrice": {
+            "type": "string",
+            "description": "Rate Line: Unit Price (quantity-based or distance-based charge element)"
+          },
+          "rateBasisValue": {
+            "type": "number",
+            "format": "double",
+            "description": "Base Rate"
+          },
+          "lineIdentifier": {
+            "type": "string",
+            "description": "Unique Request ID key from SC or API",
+            "example": "000D3A46-A684-1EEF-83DA-7229F0DF6546",
+            "maxLength": 36,
+            "minLength": 0
+          },
+          "priceCalculationDate": {
+            "type": "string",
+            "description": "Charge service date",
+            "example": "2021-09-01T12:34:00Z"
+          },
+          "chargeType": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChargeType"
+            },
+            "maxItems": 2147483647,
+            "minItems": 1
+          },
+          "hireDays": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Number of days",
+            "example": 1,
+            "maximum": 9999,
+            "minimum": 1
+          },
+          "currency": {
+            "type": "string",
+            "description": "Charge Currency",
+            "example": "USD",
+            "maxLength": 3,
+            "minLength": 0
+          }
+        },
+        "required": [
+          "lineIdentifier"
+        ]
+      },
+      "References": {
+        "type": "object",
+        "properties": {
+          "referenceTypeName": {
+            "type": "string",
+            "description": "records the type of haulage e.g. Carrier Haulage or Merchant Haulage"
+          },
+          "referenceIdentifier": {
+            "type": "string",
+            "description": "Additional References which can be used",
+            "maxLength": 20,
+            "minLength": 0
+          },
+          "referenceTypeCode": {
+            "type": "string",
+            "description": "Records the value of type of Haulage",
+            "example": "ZMHTI",
+            "maxLength": 5,
+            "minLength": 0
+          },
+          "reference": {
+            "type": "string",
+            "description": "Records the Actual value of FRO or Null",
+            "maxLength": 35,
+            "minLength": 0
+          }
+        },
+        "required": [
+          "referenceTypeCode"
+        ]
+      },
+      "Seal": {
+        "type": "object",
+        "properties": {
+          "sealType": {
+            "type": "string",
+            "description": "Seal Type is required to identify the type of a Seal updated on Laden Container\nAllowed values are :\n    - CARRIER_SEAL\n    - CUSTOMS_SEAL\n    - SHIPPER_SEAL\n    - VETERINARIAN_SEAL\n",
+            "enum": [
+              "CARRIER_SEAL",
+              "CUSTOMS_SEAL",
+              "SHIPPER_SEAL",
+              "VETERINARIAN_SEAL"
+            ],
+            "example": "CARRIER_SEAL",
+            "maxLength": 80,
+            "minLength": 0
+          },
+          "sealNumber": {
+            "type": "string",
+            "description": "Seal Number is a number to be sent by vendor for Laden container against a Seal Type",
+            "example": "ZA5950668",
+            "maxLength": 80,
+            "minLength": 0
+          },
+          "sealKind": {
+            "type": "string",
+            "description": " SealKind indicates the type of operation the user intends to perform on the seal; it is mandatory for Update and Delete operations, and optional for Create operation.\n                    Allowed values are :\n                        - Create\n                        - Update\n                        - Delete\n",
+            "enum": [
+              "Create",
+              "Update",
+              "Delete"
+            ],
+            "example": "Create"
+          }
+        },
+        "required": [
+          "sealNumber"
+        ]
+      },
+      "TelecommunicationNumbers": {
+        "type": "object",
+        "properties": {
+          "telecommunicationNumber": {
+            "type": "string",
+            "description": "Vendor/Truck Driver- Tel/Mobile/Fax number",
+            "example": "+45 123456",
+            "maxLength": 30,
+            "minLength": 0
+          },
+          "telecommunicationNumberType": {
+            "type": "string",
+            "description": " Vendor/Truck Driver telecommunication number type\n like\n - Telephone\n - Mobile phone\n - Facsimile\n - Fax\n",
+            "example": "Telephone",
+            "maxLength": 15,
+            "minLength": 0
+          }
+        }
+      },
+      "TransportDocument": {
+        "type": "object",
+        "description": "Transport Order Updates ",
+        "properties": {
+          "uniqueIdentifier": {
+            "type": "string",
+            "description": "A unique message ID provided by the vendor.",
+            "example": "000D3A46-A684-1EEF-83DA-7229F0DF653B",
+            "maxLength": 36,
+            "minLength": 32
+          },
+          "uniqueIdentifierNonUuid": {
+            "type": "string",
+            "description": "A unique key provided by the vendor, related to the message. This identifier is used to correlate messages on the vendor's side.",
+            "example": "cc501520-c030-4fa5-b940-c2e95f873570",
+            "maxLength": 36,
+            "minLength": 0
+          },
+          "createTimestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The timestamp indicating when the message or event was created on the vendor's side.",
+            "example": "2024-04-02T10:27:48Z"
+          },
+          "additionalRemarksFromCarrier": {
+            "type": "string",
+            "description": "Additional remarks from the carrier. This field can contain up to 500 characters and is used to provide any extra information or comments from the carrier's side.",
+            "example": "Additional remarks from carrier",
+            "maxLength": 500
+          },
+          "references": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/References"
+            }
+          },
+          "parties": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Party"
+            },
+            "maxItems": 2147483647,
+            "minItems": 1
+          },
+          "document": {
+            "$ref": "#/components/schemas/Document"
+          },
+          "communicationMediaType": {
+            "$ref": "#/components/schemas/CommunicationMediaType"
+          },
+          "carrierBooking": {
+            "$ref": "#/components/schemas/CarrierBooking"
+          },
+          "transportOrder": {
+            "$ref": "#/components/schemas/TransportOrder"
+          },
+          "rate": {
+            "$ref": "#/components/schemas/Rate"
+          }
+        },
+        "required": [
+          "carrierBooking",
+          "parties",
+          "uniqueIdentifier"
+        ]
+      },
+      "TransportLeg": {
+        "type": "object",
+        "properties": {
+          "actualLastFreePickupDate": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last Free Date: Only relevant for Rail Vendors\nThis is the date before which the container needs to be picked up from Rail Terminal (Destination)\nRoad Vendors should not update this date\n\n- Date Format : yyyy-MM-ddTHH:mm:ssZ\n",
+            "example": "2024-04-12T07:07:29Z"
+          },
+          "cargoStuffings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CargoStuffing"
+            }
+          },
+          "event": {
+            "$ref": "#/components/schemas/Event"
+          }
+        }
+      },
+      "TransportOrder": {
+        "type": "object",
+        "properties": {
+          "transportPlan": {
+            "$ref": "#/components/schemas/TransportPlan"
+          },
+          "cargoStuffing": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CargoStuffingDetails"
+            }
+          }
+        }
+      },
+      "Truck": {
+        "type": "object",
+        "properties": {
+          "truckIdentifier": {
+            "maxLength": 20,
+            "type": "string",
+            "description": "Truck Unique Identifier, Could be a serial number of Electric Truck",
+            "example": "TRK1234567"
+          },
+          "truckLicensePlate": {
+            "maxLength": 20,
+            "type": "string",
+            "description": "Truck Licence Plate",
+            "example": "US: CA76865L"
+          }
+        }
+      },
+      "Trailer": {
+        "type": "object",
+        "properties": {
+          "trailerIdentifier": {
+            "maxLength": 20,
+            "type": "string",
+            "description": "Chassis Number, usually used for Chassis only, not for Trailer. It normally consists of Chassis provider SCAC (4 characters) followed by 6-7 digits",
+            "example": "GLTN417558"
+          },
+          "trailerLicensePlate": {
+            "maxLength": 20,
+            "type": "string",
+            "description": "Trailer/Chassis Licence Plate",
+            "example": "EJ16VHM "
+          }
+        }
+      },
+      "Carriage": {
+        "type": "object",
+        "properties": {
+          "truck": {
+            "$ref": "#/components/schemas/Truck"
+          },
+          "trailer": {
+            "$ref": "#/components/schemas/Trailer"
+          }
+        }
+      },
+      "TransportPlan": {
+        "type": "object",
+        "properties": {
+          "carriage": {
+            "$ref": "#/components/schemas/Carriage"
+          },
+          "transportLeg": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TransportLeg"
+            }
+          },
+          "party": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Party_1"
+            }
+          }
+        }
+      },
+      "Base64FileData": {
+        "type": "object",
+        "properties": {
+          "fileName": {
+            "type": "string",
+            "description": "The name file to be attached",
+            "example": "test.jpg"
+          },
+          "content": {
+            "type": "string",
+            "description": "The file content in base 64 encoded string format"
+          },
+          "contentType": {
+            "type": "string",
+            "description": "The mime content type of the file to be attached\nAllowed values:\n- application/pdf\n- image/jpeg\n- image/png\n",
+            "enum": [
+              "application/pdf",
+              "image/jpeg",
+              "image/png"
+            ],
+            "example": "application/pdf"
+          }
+        },
+        "required": [
+          "content",
+          "contentType",
+          "fileName"
+        ]
+      },
+      "ApiResponse": {
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "traceId": {
+            "type": "string"
+          },
+          "statusCode": {
+            "type": "string"
+          },
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "TransportOrderEvent": {
+        "type": "object",
+        "description": "Transport events ",
+        "properties": {
+          "uniqueIdentifier": {
+            "type": "string",
+            "description": "A unique message ID provided by the vendor.",
+            "example": "000D3A46-A684-1EEF-83DA-7229F0DF653B",
+            "maxLength": 36,
+            "minLength": 32
+          },
+          "uniqueIdentifierNonUuid": {
+            "type": "string",
+            "description": "A unique key provided by the vendor, related to the message. This identifier is used to correlate messages on the vendor's side.",
+            "example": "cc501520-c030-4fa5-b940-c2e95f873570",
+            "maxLength": 36,
+            "minLength": 0
+          },
+          "createTimestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The timestamp indicating when the message or event was created on the vendor's side. Date Format : yyyy-MM-ddTHH:mm:ssZ",
+            "example": "2024-04-02T10:27:48Z"
+          },
+          "additionalRemarksFromCarrier": {
+            "type": "string",
+            "description": "Additional remarks from the carrier. This field can contain up to 500 characters and is used to provide any extra information or comments from the carrier's side.",
+            "example": "Additional remarks from carrier",
+            "maxLength": 500
+          },
+          "parties": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Party"
+            },
+            "maxItems": 2147483647,
+            "minItems": 1
+          },
+          "references": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/References"
+            }
+          },
+          "document": {
+            "$ref": "#/components/schemas/Document"
+          },
+          "communicationMediaType": {
+            "$ref": "#/components/schemas/CommunicationMediaType"
+          },
+          "carrierBooking": {
+            "$ref": "#/components/schemas/CarrierBooking"
+          },
+          "transportOrder": {
+            "$ref": "#/components/schemas/TransportOrderEventInternal"
+          },
+          "transactionType": {
+            "type": "string",
+            "description": "The transaction type serves as a technical acknowledgment indicator from the vendor. A value of '100' indicates a technical acknowledgment.",
+            "example": "100",
+            "maxLength": 3,
+            "minLength": 0
+          }
+        },
+        "required": [
+          "carrierBooking",
+          "parties",
+          "uniqueIdentifier"
+        ]
+      },
+      "TransportOrderEventInternal": {
+        "type": "object",
+        "properties": {
+          "transportPlan": {
+            "$ref": "#/components/schemas/TransportPlanEventInternal"
+          }
+        }
+      },
+      "TransportPlanEventInternal": {
+        "type": "object",
+        "properties": {
+          "transportLeg": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TransportLeg"
+            }
+          }
+        }
+      },
+      "DocumentDto": {
+        "type": "object",
+        "properties": {
+          "documentId": {
+            "type": "string"
+          },
+          "vendorCode": {
+            "type": "string"
+          },
+          "transportOrderNumber": {
+            "type": "string"
+          },
+          "userReferenceName": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "mimeType": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "fileSize": {
+            "type": "string"
+          },
+          "fileUri": {
+            "type": "string"
+          },
+          "uploadUserId": {
+            "type": "string"
+          },
+          "uploadTimestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "documentContent": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "Consumer-Key": {
+        "description": "HTTP Header Consumer-Key, API key used for authorisation to the API",
+        "in": "header",
+        "name": "Consumer-Key",
+        "type": "apiKey"
+      },
+      "oauth2Prod": {
+        "type": "oauth2",
+        "description": "Maersk IAM OAuth 2 Security for confidential client applications (server side applications)\n\n Authorization following RFC8725",
+        "flows": {
+          "clientCredentials": {
+            "tokenUrl": "https://api.maersk.com/customer-identity/oauth/v2/access_token",
+            "scopes": {
+              "ec.{{vendorCode}}.pr.Landside-Chasis.read": "Users with Chasis scope have access"
+            }
+          }
+        }
+      },
+      "oauth2Stage": {
+        "description": "Maersk **stage** Identity and Access Management for confidential client applications (server side applications)\nAuthorization following RFC8725",
+        "type": "oauth2",
+        "flows": {
+          "clientCredentials": {
+            "tokenUrl": "https://api-stage.maersk.com/customer-identity/oauth/v2/access_token",
+            "scopes": {
+              "ec.{{vendorCode}}.pr.Landside-Chasis.read": "Users with Chasis scope have access"
+            }
+          }
+        }
+      }
+    }
+  }
+}

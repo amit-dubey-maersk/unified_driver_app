@@ -1,0 +1,10 @@
+node_modules/
+.git
+.github
+.env
+edi214
+events
+data/pglite
+test
+README.md
+Dockerfile

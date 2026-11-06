@@ -1,0 +1,5 @@
+node_modules/
+.env
+edi/
+data/pglite/
+data/pglite.lock

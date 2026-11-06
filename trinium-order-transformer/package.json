@@ -1,0 +1,24 @@
+{
+  "name": "trinium-order-transformer",
+  "version": "1.0.0",
+  "description": "Transforms Trinium EDI 204 load tenders into mobile-backend order JSON and publishes to Kafka",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "once": "node src/index.js --once",
+    "load-geo": "node src/cli/loadGeo.js",
+    "test": "node --test --test-force-exit test/"
+  },
+  "dependencies": {
+    "@electric-sql/pglite": "^0.3.0",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "kafkajs": "^2.2.4",
+    "pg": "^8.17.1",
+    "prom-client": "^15.1.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
