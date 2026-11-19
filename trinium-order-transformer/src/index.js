@@ -6,6 +6,8 @@ import { loadRefData } from './refdata.js';
 import { scanOnce, folders, ensureFolders } from './pipeline/watcher.js';
 import { flushOutbox, closeKafka, kafkaEnabled } from './kafka/publisher.js';
 import { client, registerDbMetrics } from './metrics.js';
+import { processingMode } from './mode.js';
+import { sftpDirs } from './sftp.js';
 
 const once = process.argv.includes('--once');
 const port = process.env.PORT || 8080;
@@ -22,7 +24,7 @@ if (!geo.size) console.warn('[GEO] ref_geo_location is empty: every stop will be
 setInterval(() => loadRefData(db()).catch(e => console.error('[REF] refresh failed, keeping previous values:', e.message)), Number(process.env.REF_REFRESH_MS || 300000)).unref();
 registerDbMetrics(db);
 await ensureFolders(folders());
-console.log(`[CFG] input=${folders().input} topic=${topic} kafka=${kafkaEnabled() ? 'ENABLED' : 'disabled (messages stay PENDING in outbound_messages)'}`);
+console.log(`[CFG] mode=${processingMode().toUpperCase()} input=${processingMode() === 'kafka' ? `sftp:${process.env.SFTP_HOST}:${sftpDirs().in204} (archive ${sftpDirs().archive204})` : folders().input} topic=${topic} kafka=${kafkaEnabled() ? 'ENABLED' : 'disabled (messages stay PENDING in outbound_messages)'}`);
 
 if (once) {
   const r = await scanOnce({ geo, topic });

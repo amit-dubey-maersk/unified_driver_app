@@ -2,6 +2,7 @@ import { readFileSync, existsSync, mkdirSync, writeFileSync, renameSync } from '
 import { join } from 'path';
 import { handleEvent, flushFiles, loadConfig, toEvents } from '../processor.js';
 import { eventOrder } from '../sources.js';
+import { isKafkaMode } from '../mode.js';
 
 /**
  * Every message read from the topic is also saved as-is to KAFKA_DUMP_DIR (default ./events/received) so it can be checked against the
@@ -22,7 +23,8 @@ function dumpRaw(dir, topic, partition, m) {
   } catch (err) { console.warn(`[KAFKA] could not save raw message @${m.offset}: ${err.message}`); }
 }
 
-export const consumerEnabled = () => process.env.KAFKA_ENABLED === 'true';
+// The consumer runs in PROCESSING_MODE=kafka (KAFKA_ENABLED=false still lets you pause it); off in local mode.
+export const consumerEnabled = () => isKafkaMode() && process.env.KAFKA_ENABLED !== 'false';
 
 let consumer;
 

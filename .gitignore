@@ -1,3 +1,20 @@
 node_modules/
 .env
 .DS_Store
+
+# Never commit: SFTP keys, geofence data, sample EDI, local tooling, DB scripts (see README)
+pubkey*
+*.pem
+*.p12
+.vscode/
+204_New/
+214_new/
+OALM*/
+Geo*.csv
+**/data/
+**/scripts/
+**/src/db/schema.sql
+logs/
+events/received/
+edi214/
+*.zip

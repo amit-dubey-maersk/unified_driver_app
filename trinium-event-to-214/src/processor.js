@@ -8,6 +8,10 @@ import { build214, fileName214, splitContainer, appSizeToN7, sizeFromOrder, utcT
 import { utcToLocalInState } from './tz.js';
 import { metrics } from './metrics.js';
 import { normalizeSupplierApi } from './adapters/supplierApi.js';
+import { isKafkaMode, processingMode } from './mode.js';
+import { trace, issue } from './trace.js';
+import { triniumDriverFor } from './drivers.js';
+import { withSftp, sftpDirs } from './sftp.js';
 
 export function loadConfig(env = process.env) {
   // EDI_PROFILE=DRAYAPP (default): shape of the existing DrayApp -> Trinium 214s (HDDR>HDDR, B10-01 = 204 SS, WO + LX segments,
@@ -24,8 +28,10 @@ export function loadConfig(env = process.env) {
     controlStart: Number(env.EDI_CONTROL_START || 50000000),
     controlStep: Number(env.EDI_CONTROL_STEP || 7),
     outDir: env.EDI_OUT_DIR || './edi214/outbound',
+    sftpOut: processingMode(env) === 'kafka',                      // PROCESSING_MODE=kafka: also deliver every 214 to the Trinium SFTP
     toMode: env.L11_TO_MODE || 'from204',           // from204 | omit  (OALM 214 TO values are internal; DrayApp 214 TO == 204 TO)
     appointment214: env.ENABLE_APPOINTMENT_214 === 'true', // AA/AB are not app events -> off
+    driverIn214: env.DRIVER_IN_214 !== 'false', // L11*<Trinium driver id>*DR in the 214 (mirrors the 204)
     sendXB: env.SEND_XB !== undefined ? env.SEND_XB === 'true' : true, // driver Accept -> XB (605 of 2,165 DrayApp 214s)
   };
 }
@@ -74,6 +80,52 @@ async function record(t, ev, eventId, outcome, detail) {
  * Outcomes: SENT_214 | HELD | SKIPPED | DUPLICATE | ERROR
  */
 export async function handleEvent(ev, cfg = loadConfig(), now = new Date()) {
+  const result = await handleEventInner(ev, cfg, now);
+  // Compare what came in with what was decided/produced (never allowed to break processing).
+  try { await traceEvent(ev, result); } catch (e) { console.warn(`[TRACE] compare failed for event ${ev?.eventId}: ${e.message}`); }
+  return result;
+}
+
+const ISSUE_BY_OUTCOME = { ERROR: 'error', HELD: 'info', SKIPPED: 'warn', DUPLICATE: 'info' };
+
+/** One trace record per event: the event as received, the leg/stop it was matched to, and the 214 produced (or why not). */
+async function traceEvent(ev, r) {
+  const rp = ev?.event?.routePoint;
+  const incoming = {
+    eventId: ev?.eventId, eventType: ev?.eventType, eventStatus: ev?.event?.eventStatus, source: ev?.source, supplierContract: !!ev?._supplier,
+    orderNumber: ev?.order?.orderNumber, orderId: ev?.order?.orderId, sourceSystem: ev?.order?.sourceSystem, occurredAt: ev?.occurredAt, clientSequence: ev?.clientSequence,
+    routePoint: rp ? { routePointId: rp.routePointId, siteCode: rp.siteCode, tz: rp.timeZoneOffset, arrivalUtc: rp.actualArrivalDateTimeUTC, arrivalLocal: rp.actualArrivalDateTimeLocal,
+      departureUtc: rp.actualDepartureDateTimeUTC, departureLocal: rp.actualDepartureDateTimeLocal } : null,
+    updates: ev?.updates ? Object.keys(ev.updates) : [], decision: ev?.updates?.decision?.decision,
+    container: (ev?.updates?.container || ev?.event?.container)?.containerNumber, chassis: ev?.updates?.chassis?.chassisNumber,
+  };
+  let leg = null, sent = null;
+  const ref = ev?.order?.orderNumber != null ? String(ev.order.orderNumber) : null;
+  if (ref) {
+    leg = (await db().query('SELECT dispatch_seq, status, container_number, bol, leg_type FROM trinium_legs WHERE dispatch_seq=$1', [ref])).rows[0] || null;
+    if (r.fileName) sent = (await db().query('SELECT at7_code, event_time_local, route_seq, isa_control, file_name, sftp_status, content FROM edi214_sent WHERE file_name=$1', [r.fileName])).rows[0] || null;
+  }
+  const outgoing = {
+    outcome: r.outcome, detail: r.detail, matchedLeg: leg ? { status: leg.status, container: leg.container_number, bol: leg.bol, legType: leg.leg_type } : null,
+    edi214: sent ? { code: sent.at7_code, eventTimeLocal: sent.event_time_local, routeSeq: sent.route_seq, isaControl: sent.isa_control, file: sent.file_name, sftp: sent.sftp_status,
+      segments: sent.content.split('~').map(x => x.trim()).filter(x => /^(B10|L11|AT7|MS1|N7|LX)/.test(x)) } : null,
+  };
+  const issues = [];
+  const lvl = ISSUE_BY_OUTCOME[r.outcome];
+  if (lvl) issues.push(issue(lvl, r.outcome, r.detail || ''));
+  if (!leg && ref && r.outcome !== 'DUPLICATE') issues.push(issue('error', 'UNKNOWN_ORDER', `no 204 stored for order ${ref}`));
+  if (r.outcome === 'SENT_214') {
+    if (!leg) issues.push(issue('warn', 'NO_LEG', 'leg not found after sending'));
+    else if (outgoing.edi214?.segments && incoming.container && leg.container_number && incoming.container !== leg.container_number)
+      issues.push(issue('warn', 'CONTAINER_CHANGED', `driver container ${incoming.container} differs from the 204 container ${leg.container_number}`));
+    const local = incoming.routePoint?.arrivalLocal || incoming.routePoint?.departureLocal;
+    if (local && sent && String(local).replace(/\D/g, '').slice(0, 12) !== sent.event_time_local) issues.push(issue('info', 'TIME_CONVERTED', `event local ${local} -> 214 ${sent.event_time_local}`));
+  }
+  if (String(r.detail || '').includes('schema warning')) issues.push(issue('warn', 'SCHEMA_WARNING', r.detail));
+  await trace({ kind: 'driver_event', ref, source: ev?.eventId, outcome: r.outcome, incoming, outgoing, issues, full: { event: ev, edi214: sent?.content } });
+}
+
+async function handleEventInner(ev, cfg, now) {
   const v = ev?._invalid ? { ok: false, errors: [] } : ev?._supplier ? { ok: true } : validateEvent(ev);
   const eventId = ev?.eventId || `invalid-${sha(JSON.stringify(ev))}`;
   if (!v.ok) {
@@ -165,6 +217,14 @@ export async function handleEvent(ev, cfg = loadConfig(), now = new Date()) {
       : '';
     const size = appSizeToN7(eq.container_size_type) || sizeFromOrder(od.containerType, od.containerHeight) || '';
 
+    // Driver: the app's driver id -> Trinium id (driver_mapping). No driver in the app data = the one Trinium assigned in the 204.
+    const ourDrv = eq.driver?.driverId || eq.driver?.badgeNumber || null;
+    let drvTrinium = leg.driver_code || undefined;
+    if (ourDrv) {
+      drvTrinium = (await triniumDriverFor(t, ourDrv)) || undefined;
+      if (!drvTrinium) warn.push(`driver ${ourDrv} has no row in driver_mapping: left out of the 214`);
+    }
+
     const idem = `${leg.dispatch_seq}|${code}|${lp.date}${lp.time}`;
     if ((await t.query('SELECT 1 FROM edi214_sent WHERE idempotency_key=$1', [idem])).rows.length) {
       return fin('SKIPPED', `214 ${code} for ${lp.date} ${lp.time} already generated`);
@@ -184,13 +244,14 @@ export async function handleEvent(ev, cfg = loadConfig(), now = new Date()) {
       to: cfg.toMode === 'omit' ? undefined : od.triniumOrderNumber,
       legType: leg.leg_type, legNumber: leg.leg_number || '1',
       chassis: eq.chassis || leg.last_chassis || undefined,
+      driver: cfg.driverIn214 ? drvTrinium : undefined,
       container: { ...c, weight, size }, code, local: lp,
     });
     const fileName = fileName214(now, ctl, code, { profile: cfg.profile, container: containerNo || '' });
     await t.query(
-      `INSERT INTO edi214_sent (dispatch_seq, at7_code, event_time_local, route_seq, event_id, idempotency_key, isa_control, file_name, content)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
-      [leg.dispatch_seq, code, lp.date + lp.time, routeSeq, eventId, idem, String(ctl).padStart(9, '0'), fileName, content]);
+      `INSERT INTO edi214_sent (dispatch_seq, at7_code, event_time_local, route_seq, event_id, idempotency_key, isa_control, file_name, content, sftp_status)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
+      [leg.dispatch_seq, code, lp.date + lp.time, routeSeq, eventId, idem, String(ctl).padStart(9, '0'), fileName, content, cfg.sftpOut ? 'PENDING' : null]);
     return fin('SENT_214', `${code} ${lp.date} ${lp.time} LT -> ${fileName}${warn.length ? ' | ' + warn.join('; ') : ''}`, { code, fileName });
   });
 
@@ -199,16 +260,65 @@ export async function handleEvent(ev, cfg = loadConfig(), now = new Date()) {
   return result;
 }
 
-/** Write any generated-but-unwritten 214 files to the outbound folder (atomic: temp file + rename). */
-export async function flushFiles(dir = loadConfig().outDir) {
+/**
+ * Write any generated-but-unwritten 214 files to the outbound folder (atomic: temp file + rename), then - in kafka mode -
+ * deliver them to the Trinium SFTP. The local copy is always written first and kept, so payloads can be validated locally.
+ */
+export async function flushFiles(dir = loadConfig().outDir, { sftpClient } = {}) {
   const { rows } = await db().query(`SELECT id, file_name, content FROM edi214_sent WHERE status='PENDING' ORDER BY id`);
-  if (!rows.length) return 0;
-  await mkdir(dir, { recursive: true });
+  if (rows.length) await mkdir(dir, { recursive: true });
   for (const r of rows) {
     const tmp = join(dir, `.${r.file_name}.tmp`);
     await writeFile(tmp, r.content, 'latin1');
     await rename(tmp, join(dir, r.file_name));
     await db().query(`UPDATE edi214_sent SET status='WRITTEN', written_at=NOW() WHERE id=$1`, [r.id]);
   }
+  if (isKafkaMode()) await flushSftp({ sftpClient });
   return rows.length;
+}
+
+/** Upload 214s still PENDING for the SFTP, oldest first. A failure leaves the row PENDING (retried on the next flush). */
+let sftpFlushing = Promise.resolve();
+/** One upload pass at a time: overlapping passes (event batch + timer) pick the same PENDING row, and the second one's rename fails. */
+export function flushSftp(opts = {}) {
+  const run = sftpFlushing.then(() => flushSftpOnce(opts));
+  sftpFlushing = run.catch(() => {});
+  return run;
+}
+
+async function flushSftpOnce({ sftpClient, log = console } = {}) {
+  const { rows } = await db().query(`SELECT id, file_name, content FROM edi214_sent WHERE sftp_status='PENDING' ORDER BY id LIMIT 200`);
+  if (!rows.length) return 0;
+  const dir = sftpDirs().out214;
+  const atomic = process.env.SFTP_UPLOAD_ATOMIC !== 'false'; // upload as .name.tmp then rename, so Trinium never sees a half file
+  let sent = 0;
+  try {
+    await withSftp(async c => {
+      for (const r of rows) {
+        const target = `${dir}/${r.file_name}`;
+        try {
+          if (atomic) {
+            const tmp = `${dir}/.${r.file_name}.tmp`;
+            await c.put(Buffer.from(r.content, 'latin1'), tmp);
+            await c.rename(tmp, target);
+          } else {
+            await c.put(Buffer.from(r.content, 'latin1'), target);
+          }
+          await db().query(`UPDATE edi214_sent SET sftp_status='SENT', sftp_sent_at=NOW(), sftp_error=NULL WHERE id=$1`, [r.id]);
+          metrics.sftp.inc({ result: 'sent' });
+          sent++;
+        } catch (err) {
+          await db().query(`UPDATE edi214_sent SET sftp_error=$2 WHERE id=$1`, [r.id, String(err.message).slice(0, 500)]);
+          metrics.sftp.inc({ result: 'failed' });
+          log.error(`[SFTP] upload of ${r.file_name} to ${dir} failed, will retry: ${err.message}`);
+          break; // keep order; retry the same file first next time
+        }
+      }
+    }, { client: sftpClient });
+  } catch (err) {
+    metrics.sftp.inc({ result: 'failed' });
+    log.error(`[SFTP] connection failed, ${rows.length} file(s) stay pending: ${err.message}`);
+  }
+  if (sent) log.log(`[SFTP] ${sent} 214 file(s) delivered to ${dir}`);
+  return sent;
 }

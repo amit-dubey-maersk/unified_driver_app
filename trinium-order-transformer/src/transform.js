@@ -89,7 +89,10 @@ export function buildOrderPayload(tx, status, geo) {
   const isaCarrier = (tx.isa?.receiver || '').trim().toUpperCase() || undefined; // 'hddr' and 'HDDR' both occur in the feed
   const drv = (l11(tx, process.env.DRIVER_QUALIFIER || 'DR') || '').trim() || undefined;
   const carrier = (drv ? tb : undefined) || isaCarrier || tb;
-  const driverCode = drv || (tb && tb !== isaCarrier ? tb : undefined);
+  // L11*<id>*TB is the driver (e.g. AMIT), which driver_mapping turns into our id (D-SAV2260). Set TB_IS_DRIVER=false for the old rule
+  // (a TB equal to the ISA receiver is the carrier, not a driver).
+  const tbIsDriver = process.env.TB_IS_DRIVER !== 'false';
+  const driverCode = drv || (tb && (tbIsDriver || tb !== isaCarrier) ? tb : undefined);
   const pieces = l11(tx, 'PC');
 
   const route = tx.stops
@@ -142,6 +145,7 @@ export function buildOrderPayload(tx, status, geo) {
       };
     });
 
+  const cont = container(tx.n7, warnings);
   const lfd = tx.g62.find(g => g.q === 'DM');
   const payload = strip({
     orderNumber: tx.dispatchSeq,
@@ -155,7 +159,8 @@ export function buildOrderPayload(tx, status, geo) {
       bookingRefNumber: l11(tx, 'TN'),
       customerName: tx.parties.BN?.name,
       bol: l11(tx, 'SS'),
-      ...container(tx.n7, warnings),
+      ...cont,
+      containerId: cont.containerNumber, // same value as containerNumber (the app reads either)
       direction: 'Import',
       oceanCarrier: l11(tx, 'SL'),
       chassisNumber: l11(tx, 'CH'),

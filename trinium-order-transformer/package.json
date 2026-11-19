@@ -7,8 +7,9 @@
   "scripts": {
     "start": "node src/index.js",
     "once": "node src/index.js --once",
+    "migrate": "node src/cli/migrate.js",
     "load-geo": "node src/cli/loadGeo.js",
-    "test": "node --test --test-force-exit test/"
+    "test": "LOG_DIR= TRACE_CONSOLE=false node --test --test-force-exit test/"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.3.0",
@@ -16,7 +17,8 @@
     "express": "^5.2.1",
     "kafkajs": "^2.2.4",
     "pg": "^8.17.1",
-    "prom-client": "^15.1.0"
+    "prom-client": "^15.1.0",
+    "ssh2-sftp-client": "^11.0.0"
   },
   "engines": {
     "node": ">=20"

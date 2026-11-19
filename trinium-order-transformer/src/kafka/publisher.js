@@ -1,6 +1,7 @@
 import { readFileSync } from 'fs';
 import { db } from '../db/index.js';
 import { metrics } from '../metrics.js';
+import { isKafkaMode } from '../mode.js';
 
 let producer;
 
@@ -33,7 +34,8 @@ async function getProducer() {
   return p;
 }
 
-export const kafkaEnabled = () => process.env.KAFKA_ENABLED === 'true';
+// Kafka publishing is on in PROCESSING_MODE=kafka (KAFKA_ENABLED=false still lets you pause it); off in local mode.
+export const kafkaEnabled = () => isKafkaMode() && process.env.KAFKA_ENABLED !== 'false';
 
 /**
  * Publish PENDING/FAILED outbox rows in id order. Per-key ordering is preserved: once a message for a

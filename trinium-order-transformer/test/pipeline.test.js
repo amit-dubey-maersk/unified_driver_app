@@ -107,12 +107,14 @@ test('ISO 6346 check digit and timezone offsets', () => {
   assert.equal(tzOffset('America/New_York', '2026-11-06T17:01:53'), '-05:00:00');
 });
 
-test('TB code: carrier id -> vendorCode only; any other code -> driverId', async () => {
+test('TB code is the driver (TB_IS_DRIVER=false restores: carrier id -> vendorCode only)', async () => {
   const carrierOnly = parse204(fx('create_ecl.txt'));
   const { buildOrderPayload } = await import('../src/transform.js');
   const a = buildOrderPayload(carrierOnly.transactions[0], 'NEW', geo).payload;
   assert.equal(a.vendorCode, 'OALM');
-  assert.equal(a.driverId, undefined);
+  assert.equal(a.driverId, 'OALM'); // TB is the driver
+  process.env.TB_IS_DRIVER = 'false';
+  try { assert.equal(buildOrderPayload(carrierOnly.transactions[0], 'NEW', geo).payload.driverId, undefined); } finally { delete process.env.TB_IS_DRIVER; }
 
   const withDriver = parse204(fx('create_ecl.txt').replace('L11*OALM*TB', 'L11*D-SAV2260*TB'));
   const b = buildOrderPayload(withDriver.transactions[0], 'NEW', geo).payload;
@@ -163,4 +165,21 @@ test('pickup with no appointment falls back to L11*IT; L11*AT becomes pickupNumb
   const p = buildOrderPayload(tx, 'NEW', geo).payload;
   assert.equal(p.routes[0].plannedArrivalDateTimeLocal, '2026-10-07T00:00:00');
   assert.equal(p.orderDetails.pickupNumber, '81B60F');
+});
+
+test('stop-level G62*69/70 (date only, or with time) is the stop planned arrival; it beats the order-level G62*06/10 dates', async () => {
+  const { buildOrderPayload } = await import('../src/transform.js');
+  const build = raw => buildOrderPayload(parse204(raw).transactions[0], 'NEW', geo).payload.routes;
+  const base = fx('create_fcl.txt');
+  // date-only on both stops (the Trinium 2026-11 format)
+  const a = build(base.replace('S5*1*LD', 'S5*1*LD\nG62*69*20261116').replace('S5*2*UL', 'S5*2*UL\nG62*70*20261117'));
+  assert.equal(a[0].plannedArrivalDateTimeLocal, '2026-11-16T00:00:00');
+  assert.equal(a[1].plannedArrivalDateTimeLocal, '2026-11-17T00:00:00');
+  // with time (and typed) it keeps the time
+  const b = build(base.replace('S5*1*LD', 'S5*1*LD\nG62*69*20261116*U*0800*LT').replace('S5*2*UL', 'S5*2*UL\nG62*70*20261117*X*1430*LT'));
+  assert.equal(b[0].plannedArrivalDateTimeLocal, '2026-11-16T08:00:00');
+  assert.equal(b[1].plannedArrivalDateTimeLocal, '2026-11-17T14:30:00');
+  // no stop-level date: the order-level dates are still the fallback
+  const c = build(base);
+  assert.equal(c[0].plannedArrivalDateTimeLocal, '2026-09-11T00:00:00');
 });

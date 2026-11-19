@@ -3,6 +3,9 @@ import { parse204, versionKey, l11 } from '../edi/parser.js';
 import { buildOrderPayload, STATUS } from '../transform.js';
 import { norm } from '../geo.js';
 import { db } from '../db/index.js';
+import { trace } from '../trace.js';
+import { ourDriverFor } from '../drivers.js';
+import { summarize204, summarizeOrder, compareOrder } from './compare.js';
 
 const sha = s => createHash('sha256').update(s).digest('hex');
 const stable = o => JSON.stringify(o, (k, v) => (v && typeof v === 'object' && !Array.isArray(v) ? Object.fromEntries(Object.entries(v).sort()) : v));
@@ -27,7 +30,14 @@ export async function processFile({ fileName, raw, geo, topic }) {
   const { isa, transactions } = parse204(raw);
   const results = [];
   for (const tx of transactions) {
-    results.push(await applyTransaction({ fileName, raw, isa, tx, geo, topic }));
+    const r = await applyTransaction({ fileName, raw, isa, tx, geo, topic });
+    results.push(r);
+    // Compare what came in with what was produced (never allowed to break processing).
+    try {
+      const incoming = summarize204(isa, tx), outgoing = summarizeOrder(r);
+      await trace({ kind: 'order_204', ref: tx.dispatchSeq, source: fileName, outcome: r.outcome, incoming, outgoing,
+        issues: compareOrder(incoming, outgoing, r.warnings), full: { tx, payload: r.payload } });
+    } catch (e) { console.warn(`[TRACE] compare failed for ${fileName}: ${e.message}`); }
   }
   return results;
 }
@@ -58,9 +68,15 @@ async function applyTransaction({ fileName, raw, isa, tx, geo, topic }) {
     const status = isCancel ? STATUS.CANCELLED : neverSent ? STATUS.NEW : STATUS.UPDATED;
 
     let { payload, warnings, unmatched } = buildOrderPayload(tx, status, geo);
+    let triniumDriver = payload.driverId ?? null; // as received in the 204; trinium_legs.driver_code keeps THIS (the 214 side needs it)
     if (isCancel && !tx.stops.length && existing?.payload) {
       // A cancel carrying no body: reuse the last known order so the backend can match it.
       payload = { ...existing.payload, status };
+      triniumDriver = existing.driver_code ?? null; // payload.driverId is already OUR id
+    } else if (triniumDriver) {
+      // Trinium driver id -> our driver id for the Kafka payload; unmapped = sent as-is (compare.js flags DRIVER_UNMAPPED)
+      const ours = await ourDriverFor(t, triniumDriver);
+      if (ours) payload = { ...payload, driverId: ours };
     }
 
     const { status: _s, ...business } = payload;
@@ -86,7 +102,7 @@ async function applyTransaction({ fileName, raw, isa, tx, geo, topic }) {
          raw_204=EXCLUDED.raw_204, order_id=EXCLUDED.order_id, updated_at=NOW()`,
       [
         tx.dispatchSeq, tx.csnSeq, d.triniumOrderNumber ?? null, d.workOrder ?? null, d.bol ?? null, d.bookingRefNumber ?? null,
-        d.containerNumber ?? null, d.legType ?? null, d.legNumber ?? null, payload.vendorCode ?? null, payload.driverId ?? null, d.ownerSite ?? null,
+        d.containerNumber ?? null, d.legType ?? null, d.legNumber ?? null, payload.vendorCode ?? null, triniumDriver, d.ownerSite ?? null,
         d.chassisNumber ?? null, isCancel ? 'CANCELLED' : 'ACTIVE', tx.txnType, vKey, fileName, isa.control,
         JSON.stringify(payload), hash, raw, payload.orderId ?? null,
       ],
