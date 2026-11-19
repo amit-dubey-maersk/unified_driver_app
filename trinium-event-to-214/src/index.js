@@ -6,6 +6,8 @@ import { scanEventFolder, eventFolders } from './sources.js';
 import { startConsumer, stopConsumer, consumerEnabled } from './kafka/consumer.js';
 import { client, registerDbMetrics } from './metrics.js';
 import { loadRefData } from './refdata.js';
+import { processingMode } from './mode.js';
+import { sftpDirs } from './sftp.js';
 
 const once = process.argv.includes('--once');
 const port = process.env.PORT || 8081;
@@ -24,12 +26,16 @@ const ref = await loadRefData(db()); // state time zones + event->AT7 map from t
 console.log(`[REF] ${ref.states} state time zones, ${ref.eventCodes} event code mappings`);
 setInterval(() => loadRefData(db()).catch(e => console.error('[REF] refresh failed, keeping previous values:', e.message)), Number(process.env.REF_REFRESH_MS || 300000)).unref();
 registerDbMetrics(db);
-console.log(`[CFG] events folder=${eventFolders().input} out=${cfg.outDir} sender=${cfg.sender} receiver=${cfg.receiver} kafka=${consumerEnabled() ? 'ENABLED' : 'disabled'}`);
+console.log(`[CFG] mode=${processingMode().toUpperCase()} events=${processingMode() === 'kafka' ? `kafka:${process.env.KAFKA_UPDATE_TOPIC}` : eventFolders().input} out=${cfg.outDir}${cfg.sftpOut ? ` + sftp:${process.env.SFTP_HOST}:${sftpDirs().out214}` : ''} sender=${cfg.sender} receiver=${cfg.receiver} kafka=${consumerEnabled() ? 'ENABLED' : 'disabled'}`);
 
 await flushFiles(cfg.outDir); // finish any file left unwritten by a crash
 
+const kafkaMode = processingMode() === 'kafka';
+
 if (once) {
-  const r = await scanEventFolder({ cfg });
+  // local: process the events folder. kafka: events come from the consumer, so --once only (re)delivers pending 214 files.
+  const r = kafkaMode ? [] : await scanEventFolder({ cfg });
+  if (kafkaMode) await flushFiles(cfg.outDir);
   console.log(`[EVT] pass complete: ${r.length} event(s)`);
   await db().close();
   process.exit(0);
@@ -41,7 +47,7 @@ let busy = false;
 const tick = async () => {
   if (busy) return;
   busy = true;
-  try { await scanEventFolder({ cfg }); } catch (e) { console.error('[EVT] pass error', e); } finally { busy = false; }
+  try { if (kafkaMode) await flushFiles(cfg.outDir); else await scanEventFolder({ cfg }); } catch (e) { console.error('[EVT] pass error', e); } finally { busy = false; }
 };
 setInterval(tick, pollMs);
 tick();

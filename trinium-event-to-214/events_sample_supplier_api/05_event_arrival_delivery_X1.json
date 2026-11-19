@@ -1,0 +1,44 @@
+{
+  "uniqueIdentifier": "a1b2c3d4-0000-4000-8000-000000000005",
+  "createTimestamp": "2026-11-04T15:00:00Z",
+  "parties": [
+    {
+      "partyFunction": "Carrier",
+      "partyCode": "OALM",
+      "partyName": "OALM Trucking",
+      "businessEntityCode": "OALM"
+    }
+  ],
+  "carrierBooking": {
+    "carrierBookingNumber": "4900011"
+  },
+  "transportOrder": {
+    "transportPlan": {
+      "transportLeg": [
+        {
+          "event": {
+            "eventIdentifier": "EVT-0005",
+            "eventTrigger": "ARRIVAL",
+            "timestamp": "2026-11-04T23:00:00Z",
+            "transactionType": "ADD",
+            "eventStatus": "ARRIVAL",
+            "eventType": [
+              {
+                "eventTypeName": "LOC_GUID",
+                "eventTypeCode": "12eb52e7-d27d-5495-b6ab-7c3efad46d37"
+              },
+              {
+                "eventTypeName": "REF_EVENT_LOC",
+                "eventTypeCode": "ROSS- SHAFTER"
+              },
+              {
+                "eventTypeName": "USER_ID",
+                "eventTypeCode": "D-SAV2260"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

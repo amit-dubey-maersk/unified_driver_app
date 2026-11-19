@@ -1,0 +1,16 @@
+{
+  "uniqueIdentifier": "a1b2c3d4-0000-4000-8000-000000000001",
+  "createTimestamp": "2026-11-04T15:00:00Z",
+  "parties": [
+    {
+      "partyFunction": "Carrier",
+      "partyCode": "OALM",
+      "partyName": "OALM Trucking",
+      "businessEntityCode": "OALM"
+    }
+  ],
+  "carrierBooking": {
+    "carrierBookingNumber": "4900011",
+    "carrierBookingStatus": "CARRIER_ACCEPTED"
+  }
+}

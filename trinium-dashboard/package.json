@@ -1,0 +1,23 @@
+{
+  "name": "trinium-dashboard",
+  "version": "1.0.0",
+  "description": "Read-only dashboard over the shared database, trace logs and SFTP: Trinium 204 -> app orders, and app events -> 214 -> Trinium",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node --test --test-force-exit test/*.test.js"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "pg": "^8.17.1",
+    "ssh2-sftp-client": "^11.0.0"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.3.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

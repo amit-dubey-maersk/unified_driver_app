@@ -1,0 +1,31 @@
+{
+  "eventId": "7c1e2d3f-4a5b-4c6d-8e9f-0a1b2c3d4e12",
+  "eventType": "ORDER_EVENT",
+  "occurredAt": "2026-11-05T16:00:00Z",
+  "sentAt": "2026-11-05T16:00:00Z",
+  "source": "GEOFENCE",
+  "actor": {
+    "userId": "D-SAV2260",
+    "vendorCode": "OALM",
+    "vendorScac": "OALM"
+  },
+  "order": {
+    "orderNumber": "4900012",
+    "orderId": "6e9aeb5e-9813-50f0-a7af-c4cebfa1c503",
+    "sourceSystem": "TRINIUM",
+    "workOrderNumber": "CS02486922"
+  },
+  "event": {
+    "eventStatus": "ARRIVAL",
+    "transactionType": "ADD",
+    "eventSource": "GEOFENCE",
+    "routePoint": {
+      "routePointId": "c25e3637-d8a4-549e-83ac-3d405f6608f6",
+      "timeZoneOffset": "-08:00",
+      "siteCode": "ROSS-SHAFTER",
+      "actualArrivalDateTimeUTC": "2026-11-05T16:00:00Z",
+      "actualArrivalDateTimeLocal": "2026-11-05T08:00:00",
+      "arrivalSource": "GEOFENCE"
+    }
+  }
+}

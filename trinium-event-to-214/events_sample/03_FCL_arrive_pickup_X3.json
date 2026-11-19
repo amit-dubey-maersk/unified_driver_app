@@ -1,0 +1,31 @@
+{
+  "eventId": "7c1e2d3f-4a5b-4c6d-8e9f-0a1b2c3d4e03",
+  "eventType": "ORDER_EVENT",
+  "occurredAt": "2026-11-04T16:00:00Z",
+  "sentAt": "2026-11-04T16:00:00Z",
+  "source": "GEOFENCE",
+  "actor": {
+    "userId": "D-SAV2260",
+    "vendorCode": "OALM",
+    "vendorScac": "OALM"
+  },
+  "order": {
+    "orderNumber": "4900011",
+    "orderId": "b6e40db2-3b25-5366-a625-9629d64e65d8",
+    "sourceSystem": "TRINIUM",
+    "workOrderNumber": "CS02486922"
+  },
+  "event": {
+    "eventStatus": "ARRIVAL",
+    "transactionType": "ADD",
+    "eventSource": "GEOFENCE",
+    "routePoint": {
+      "routePointId": "4df251e6-9850-58d0-9d9c-834240015d2e",
+      "timeZoneOffset": "-08:00",
+      "siteCode": "TRM E010",
+      "actualArrivalDateTimeUTC": "2026-11-04T16:00:00Z",
+      "actualArrivalDateTimeLocal": "2026-11-04T08:00:00",
+      "arrivalSource": "GEOFENCE"
+    }
+  }
+}

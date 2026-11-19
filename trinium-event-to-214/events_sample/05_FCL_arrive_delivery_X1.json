@@ -1,0 +1,31 @@
+{
+  "eventId": "7c1e2d3f-4a5b-4c6d-8e9f-0a1b2c3d4e05",
+  "eventType": "ORDER_EVENT",
+  "occurredAt": "2026-11-04T23:00:00Z",
+  "sentAt": "2026-11-04T23:00:00Z",
+  "source": "DRIVER_APP",
+  "actor": {
+    "userId": "D-SAV2260",
+    "vendorCode": "OALM",
+    "vendorScac": "OALM"
+  },
+  "order": {
+    "orderNumber": "4900011",
+    "orderId": "b6e40db2-3b25-5366-a625-9629d64e65d8",
+    "sourceSystem": "TRINIUM",
+    "workOrderNumber": "CS02486922"
+  },
+  "event": {
+    "eventStatus": "ARRIVAL",
+    "transactionType": "ADD",
+    "eventSource": "MANUAL",
+    "routePoint": {
+      "routePointId": "12eb52e7-d27d-5495-b6ab-7c3efad46d37",
+      "timeZoneOffset": "-08:00",
+      "siteCode": "ROSS-SHAFTER",
+      "actualArrivalDateTimeUTC": "2026-11-04T23:00:00Z",
+      "actualArrivalDateTimeLocal": "2026-11-04T15:00:00",
+      "arrivalSource": "DRIVER_APP"
+    }
+  }
+}

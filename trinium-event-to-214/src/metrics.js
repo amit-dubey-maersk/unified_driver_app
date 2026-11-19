@@ -5,6 +5,7 @@ client.collectDefaultMetrics();
 export const metrics = {
   events: new client.Counter({ name: 'driver_events_total', help: 'Driver-app events handled', labelNames: ['outcome'] }),
   sent: new client.Counter({ name: 'edi214_generated_total', help: '214 files generated', labelNames: ['code'] }),
+  sftp: new client.Counter({ name: 'edi214_sftp_total', help: '214 deliveries to the Trinium SFTP', labelNames: ['result'] }),
 };
 
 /** Connection-pool gauges (total / idle / waiting): waiting > 0 for long means PG_POOL_MAX is too small. */

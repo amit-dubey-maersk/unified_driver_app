@@ -109,6 +109,7 @@
           "additionalProperties": false,
           "description": "TD: transportPlan.party[] (driver).",
           "properties": {
+            "driverId": { "type": ["string", "null"], "description": "Our driver id (e.g. D-SAV2260): mapped to the Trinium driver id via driver_mapping for the 214. Falls back to badgeNumber." },
             "name": { "type": ["string", "null"] },
             "phone": { "type": ["string", "null"] },
             "licenseNumber": { "type": ["string", "null"] },

@@ -73,12 +73,13 @@ export function build214(o) {
         ...(o.bol ? [['L11', o.bol, 'SS']] : []),
         ...(o.chassis ? [['L11', o.chassis, 'CH']] : []),
         ...(o.to ? [['L11', o.to, 'TO']] : []),
-        ['L11', o.legType, 'LT'], ['L11', o.legNumber, 'LN'], n7, ['LX', '1'],
+        ['L11', o.legType, 'LT'], ['L11', o.legNumber, 'LN'], ...(o.driver ? [['L11', o.driver, process.env.DRIVER_QUALIFIER || 'DR']] : []), n7, ['LX', '1'],
       ]
       : [
         ...(o.to ? [['L11', o.to, 'TO']] : []),
         ['L11', o.legType, 'LT'], ['L11', o.legNumber, 'LN'],
         ...(o.chassis ? [['L11', o.chassis, 'CH']] : []),
+        ...(o.driver ? [['L11', o.driver, process.env.DRIVER_QUALIFIER || 'DR']] : []),
         n7,
       ]),
     ['AT7', o.code, 'NS', '', '', o.local.date, o.local.time, 'LT'],

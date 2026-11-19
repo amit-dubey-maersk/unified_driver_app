@@ -3,3 +3,5 @@ node_modules/
 edi/
 data/pglite/
 data/pglite.lock
+data/pg/
+logs/

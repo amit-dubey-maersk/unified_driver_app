@@ -1,0 +1,47 @@
+{
+  "uniqueIdentifier": "a1b2c3d4-0000-4000-8000-000000000002",
+  "createTimestamp": "2026-11-04T15:00:00Z",
+  "parties": [
+    {
+      "partyFunction": "Carrier",
+      "partyCode": "OALM",
+      "partyName": "OALM Trucking",
+      "businessEntityCode": "OALM"
+    }
+  ],
+  "carrierBooking": {
+    "carrierBookingNumber": "4900011"
+  },
+  "transportOrder": {
+    "cargoStuffing": [
+      {
+        "containerNumber": "OOCU4739582",
+        "seals": [
+          {
+            "sealType": "CARRIER_SEAL",
+            "sealNumber": "CR873761",
+            "sealKind": "Create"
+          }
+        ]
+      }
+    ],
+    "transportPlan": {
+      "carriage": {
+        "truck": {
+          "truckIdentifier": "T-118",
+          "truckLicensePlate": "8XYZ123"
+        },
+        "trailer": {
+          "trailerIdentifier": "FLKZ600139"
+        }
+      },
+      "party": [
+        {
+          "partyFunction": "DRIVER 1",
+          "partyName": "Sample Driver",
+          "badgeNumber": "D-SAV2260"
+        }
+      ]
+    }
+  }
+}
